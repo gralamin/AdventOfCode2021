@@ -1,28 +1,7 @@
-use std::fs;
+mod filelib;
 
-/// Load the "input" file
-pub fn load() -> String {
-    let contents = fs::read_to_string("input").expect("Something went wrong reading");
-    return contents;
-}
-
-/// parse A string, including empty lines, to a list of integers
-///
-/// This filters out empty lines, and returns a vector of i32s.
-///
-/// ```
-/// assert_eq!(day01::parse_string("1\n2"), vec![1, 2]);
-/// ```
-pub fn parse_string(text_input: &str) -> Vec<i32> {
-    let no_empty_lines: Vec<&str> = text_input
-        .lines()
-        .filter(|&s| !s.is_empty() && !s.trim().is_empty())
-        .collect::<Vec<_>>();
-    let result: Vec<i32> = no_empty_lines
-        .iter()
-        .map(|x| x.parse::<i32>().unwrap())
-        .collect();
-    return result;
+pub fn load_as_ints(filename: &str) -> Vec<i32> {
+    return crate::filelib::load_as_ints(filename);
 }
 
 /// Get the number of times depths increases
@@ -65,14 +44,6 @@ pub fn puzzle_b(depths: &Vec<i32>) -> i32 {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn test_parse_string() {
-        let input = "199\n200\n208\n210\n200\n207\n240\n269\n260\n263\n";
-        let expected = vec![199, 200, 208, 210, 200, 207, 240, 269, 260, 263];
-        let result = parse_string(input);
-        assert_eq!(result, expected);
-    }
 
     #[test]
     fn test_sliding_window() {
