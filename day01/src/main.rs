@@ -1,11 +1,10 @@
-use day01::load;
-use day01::parse_string;
+use day01::load_as_ints;
 use day01::puzzle_a;
 use day01::puzzle_b;
 
 fn main() {
-    let contents = load();
-    let depths = parse_string(&contents);
+    let filename = "input";
+    let depths = load_as_ints(filename);
 
     let value = puzzle_a(&depths);
     println!("Answer to 1st question: {}", value);
