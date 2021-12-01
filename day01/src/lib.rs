@@ -1,8 +1,6 @@
 mod filelib;
 
-pub fn load_as_ints(filename: &str) -> Vec<i32> {
-    return crate::filelib::load_as_ints(filename);
-}
+pub use crate::filelib::load_as_ints;
 
 /// Get the number of times depths increases
 /// ```
