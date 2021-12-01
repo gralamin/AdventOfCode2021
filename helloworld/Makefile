@@ -11,6 +11,12 @@ clean:
 	cargo clean --verbose
 	- rm $(prog).day
 
+format:
+	cargo fmt
+
+lint:
+	cargo fmt -- --check
+
 all: build
 
-.PHONY: build test all clean
+.PHONY: build test all clean format lint
