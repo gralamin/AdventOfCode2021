@@ -1,6 +1,6 @@
-mod filelib;
+extern crate filelib;
 
-pub use crate::filelib::load_as_ints;
+pub use filelib::load_as_ints;
 
 /// Get the number of times depths increases
 /// ```
