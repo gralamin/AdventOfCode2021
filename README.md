@@ -1,5 +1,7 @@
 # AdventOfCode2021
-Advent of Code for 2021
+Advent of Code for 2021 - https://adventofcode.com/2021
+
+## Creating a new date executable
 
 Per day, remember to:
 ```
@@ -38,3 +40,8 @@ extern crate my_lib;
 ```
 
 *Note*: Libs use a slightly different Makefile (no copy)
+
+## Lib list
+
+* `filelib` - File input/output helper methods to do with basic types (eg, not types in other libraries)
+* `submarinelib` -  Provides structs to represent a Submarine, where it is, its movement, etc.
