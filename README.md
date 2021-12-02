@@ -36,3 +36,5 @@ And in the code use
 ```
 extern crate my_lib;
 ```
+
+*Note*: Libs use a slightly different Makefile (no copy)
