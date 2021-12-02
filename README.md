@@ -17,3 +17,23 @@ To format code, call:
 ```
 make format
 ```
+
+## Dependencies
+
+To make a new lib:
+
+```
+cargo new --lib foo
+```
+
+Then you can refer to that lib in the Cargo.toml:
+
+```
+[dependencies.my_lib]
+path = "../my_lib"
+```
+
+And in the code use
+```
+extern crate my_lib;
+```
