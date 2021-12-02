@@ -103,6 +103,59 @@ pub fn puzzle_a(steps: Vec<(SubDirection, i32)>) -> i32 {
     return sub.horizontal_pos * sub.depth;
 }
 
+#[derive(Debug)]
+struct SubB {
+    horizontal_pos: i32,
+    depth: i32,
+    aim: i32,
+}
+
+impl SubPosition for SubB {
+    fn forward(&mut self, by: i32) {
+        self.horizontal_pos += by;
+        self.depth += self.aim * by;
+    }
+
+    fn down(&mut self, by: i32) {
+        self.aim += by;
+    }
+
+    fn up(&mut self, by: i32) {
+        self.aim -= by;
+    }
+}
+
+/// Move the sub according to the directions for a puzzle b version.
+///
+/// Assumes the directions have already been parsed.
+///
+/// ```
+/// let steps = vec![(day02::SubDirection::Forward, 5),
+///                  (day02::SubDirection::Down, 5),
+///                  (day02::SubDirection::Forward, 8),
+///                  (day02::SubDirection::Up, 3),
+///                  (day02::SubDirection::Down, 8),
+///                  (day02::SubDirection::Forward, 2)];
+/// assert_eq!(day02::puzzle_b(steps), 900);
+/// ```
+pub fn puzzle_b(steps: Vec<(SubDirection, i32)>) -> i32 {
+    let mut sub = SubB {
+        horizontal_pos: 0,
+        depth: 0,
+        aim: 0,
+    };
+    for command in steps {
+        let dir = command.0;
+        let by = command.1;
+        match dir {
+            SubDirection::Forward => sub.forward(by),
+            SubDirection::Down => sub.down(by),
+            SubDirection::Up => sub.up(by),
+        }
+    }
+    return sub.horizontal_pos * sub.depth;
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -125,5 +178,29 @@ mod tests {
         assert_eq!(sub.depth, 10);
         sub.forward(2);
         assert_eq!(sub.horizontal_pos, 15);
+    }
+
+    #[test]
+    fn test_sub_b_movement() {
+        let mut sub = SubB {
+            horizontal_pos: 0,
+            depth: 0,
+            aim: 0,
+        };
+        sub.forward(5);
+        assert_eq!(sub.horizontal_pos, 5);
+        assert_eq!(sub.depth, 0);
+        sub.down(5);
+        assert_eq!(sub.aim, 5);
+        sub.forward(8);
+        assert_eq!(sub.horizontal_pos, 13);
+        assert_eq!(sub.depth, 40);
+        sub.up(3);
+        assert_eq!(sub.aim, 2);
+        sub.down(8);
+        assert_eq!(sub.aim, 10);
+        sub.forward(2);
+        assert_eq!(sub.horizontal_pos, 15);
+        assert_eq!(sub.depth, 60);
     }
 }
