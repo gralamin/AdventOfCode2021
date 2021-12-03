@@ -1,71 +1,134 @@
 extern crate filelib;
 pub use filelib::load_no_blanks;
 
-fn get_eplison_from_gamma(input: &str) -> String {
-    let mut output: String = "".to_owned();
-    for char in input.chars() {
-        match char {
-            '0' => output.push_str("1"),
-            '1' => output.push_str("0"),
-            _ => (),
-        }
-    }
-    return output.to_string();
+const ONE: bool = true;
+const ZERO: bool = false;
+
+trait BitExtractable {
+    fn get_bit(&self, at: i32) -> bool;
+    fn get_bit_from_left(&self, at: i32) -> bool;
 }
 
-fn get_gamma_rate_as_binary_string(input: &Vec<&str>) -> String {
-    // we want the most common bit in each position
-    let length = input[0].chars().count();
-    let mut output: String = "".to_owned();
-    for n in 0..length {
-        let most_common = get_most_common_bit(input, n);
-        if most_common {
-            output.push_str("1");
+#[derive(Debug)]
+struct BinaryString {
+    length: i32,
+    value: i32,
+}
+
+fn build_binary_string(s: &str) -> BinaryString {
+    return BinaryString {
+        length: s.chars().count().try_into().unwrap(),
+        value: isize::from_str_radix(s, 2).unwrap() as i32,
+    };
+}
+
+impl BitExtractable for BinaryString {
+    fn get_bit(&self, at: i32) -> bool {
+        if at < self.length {
+            return self.value & (1 << at) != 0;
         } else {
-            output.push_str("0");
+            return ZERO;
         }
     }
-    return output.to_string();
+
+    fn get_bit_from_left(&self, at: i32) -> bool {
+        return self.get_bit(self.length - (at + 1));
+    }
 }
 
-fn get_most_common_bit(input: &Vec<&str>, at: usize) -> bool {
+impl Clone for BinaryString {
+    fn clone(&self) -> Self {
+        return BinaryString {
+            length: self.length,
+            value: self.value,
+        };
+    }
+}
+
+fn to_bin_strings(inputs: &Vec<&str>) -> Vec<BinaryString> {
+    return inputs.iter().map(|s| build_binary_string(s)).collect();
+}
+
+fn get_eplison_from_gamma(input: BinaryString) -> BinaryString {
+    let length = input.length;
+    let mut value = 0;
+    let base: i32 = 2;
+
+    for n in (0..length).rev() {
+        if input.get_bit(n) == ZERO {
+            value += base.pow(n.try_into().unwrap());
+        }
+    }
+    return BinaryString {
+        length: length,
+        value: value,
+    };
+}
+
+fn find_gamma_rate(inputs: &Vec<BinaryString>) -> BinaryString {
+    let length = inputs[0].length;
+    let mut value: i32 = 0;
+    let base: i32 = 2;
+    for n in (0..length).rev() {
+        let most_common = get_most_common_bit(inputs, n);
+        if most_common == ONE {
+            value += base.pow(n.try_into().unwrap());
+        }
+    }
+
+    return BinaryString {
+        length: length,
+        value: value,
+    };
+}
+
+fn get_most_common_bit(inputs: &Vec<BinaryString>, at: i32) -> bool {
     let mut ones = 0;
     let mut zeroes = 0;
-    for cur_num in input {
-        match cur_num.chars().nth(at).unwrap() {
-            '0' => zeroes += 1,
-            '1' => ones += 1,
-            _ => {}
+    for cur in inputs {
+        match cur.get_bit(at) {
+            ONE => ones += 1,
+            ZERO => zeroes += 1,
         }
     }
-    return if ones >= zeroes { true } else { false };
+    return if ones >= zeroes { ONE } else { ZERO };
 }
 
-fn recursive_filter_rating(input: &Vec<&str>, at: usize, most_common: bool) -> i32 {
+fn recursive_filter_rating(input: &Vec<BinaryString>, at: usize, most_common: bool) -> i32 {
+    if input.len() == 0 {
+        // something went wrong.
+        return -999;
+    }
     if input.len() == 1 {
-        return isize::from_str_radix(input[0], 2).unwrap() as i32;
+        return input[0].value;
     }
-    let common_bool = get_most_common_bit(input, at);
-    let common_char: char;
+    let common_bool = get_most_common_bit(input, at.try_into().unwrap());
+    let check_for: bool;
     if most_common {
-        common_char = if common_bool { '1' } else { '0' };
+        check_for = if common_bool { ONE } else { ZERO };
     } else {
-        common_char = if common_bool { '0' } else { '1' };
+        check_for = if common_bool { ZERO } else { ONE };
     }
-    let recurse_input: Vec<&str> = input
-        .iter()
-        .filter(|x| x.chars().nth(at).unwrap() == common_char)
+    let recurse_input: Vec<BinaryString> = input
+        .into_iter()
+        .filter(|x| x.get_bit(at.try_into().unwrap()) == check_for)
         .cloned()
         .collect();
-    return recursive_filter_rating(&recurse_input, at + 1, most_common);
+    let next_at: usize;
+    if at == 0 {
+        next_at = 0;
+    } else {
+        next_at = at - 1;
+    }
+    return recursive_filter_rating(&recurse_input, next_at, most_common);
 }
 
-fn get_oxygen_generator_rating(input: &Vec<&str>) -> i32 {
-    return recursive_filter_rating(input, 0, true);
+fn get_oxygen_generator_rating(input: &Vec<BinaryString>) -> i32 {
+    return recursive_filter_rating(input, (input[0].length - 1).try_into().unwrap(), true);
 }
 
-fn get_co2_scrubber_rating(input: &Vec<&str>) -> i32 {
-    return recursive_filter_rating(input, 0, false);
+fn get_co2_scrubber_rating(input: &Vec<BinaryString>) -> i32 {
+    return recursive_filter_rating(input, (input[0].length - 1).try_into().unwrap(), false);
 }
 
 /// puzzle_a
@@ -86,11 +149,11 @@ fn get_co2_scrubber_rating(input: &Vec<&str>) -> i32 {
 /// assert_eq!(day03::puzzle_a(sample_input), 198);
 /// ```
 pub fn puzzle_a(input: Vec<&str>) -> i32 {
-    let gamma_str = get_gamma_rate_as_binary_string(&input);
-    let eplison_str = get_eplison_from_gamma(&gamma_str);
-    let gamma = isize::from_str_radix(&gamma_str, 2).unwrap();
-    let eplison = isize::from_str_radix(&eplison_str, 2).unwrap();
-    return gamma as i32 * eplison as i32;
+    let bin_strings = to_bin_strings(&input);
+    let gamma = find_gamma_rate(&bin_strings);
+    let gamma_v = gamma.value;
+    let eplison = get_eplison_from_gamma(gamma);
+    return gamma_v * eplison.value;
 }
 
 /// puzzle_b
@@ -111,8 +174,9 @@ pub fn puzzle_a(input: Vec<&str>) -> i32 {
 /// assert_eq!(day03::puzzle_b(sample_input), 230);
 /// ```
 pub fn puzzle_b(input: Vec<&str>) -> i32 {
-    let oxygen = get_oxygen_generator_rating(&input);
-    let scrubber = get_co2_scrubber_rating(&input);
+    let bin_strings = to_bin_strings(&input);
+    let oxygen = get_oxygen_generator_rating(&bin_strings);
+    let scrubber = get_co2_scrubber_rating(&bin_strings);
     return oxygen * scrubber;
 }
 
@@ -126,13 +190,14 @@ mod tests {
             "00100", "11110", "10110", "10111", "10101", "01111", "00111", "11100", "10000",
             "11001", "00010", "01010",
         ];
-        assert_eq!(get_gamma_rate_as_binary_string(&sample_input), "10110");
+        let sample = to_bin_strings(&sample_input);
+        assert_eq!(find_gamma_rate(&sample).value, 22);
     }
 
     #[test]
     fn test_eplison_from_gamma() {
-        let gamma = "10110";
-        assert_eq!(get_eplison_from_gamma(gamma), "01001")
+        let gamma = build_binary_string("10110");
+        assert_eq!(get_eplison_from_gamma(gamma).value, 9)
     }
 
     #[test]
@@ -141,7 +206,8 @@ mod tests {
             "00100", "11110", "10110", "10111", "10101", "01111", "00111", "11100", "10000",
             "11001", "00010", "01010",
         ];
-        assert_eq!(get_oxygen_generator_rating(&sample_input), 23);
+        let sample = to_bin_strings(&sample_input);
+        assert_eq!(get_oxygen_generator_rating(&sample), 23);
     }
 
     #[test]
@@ -150,6 +216,7 @@ mod tests {
             "00100", "11110", "10110", "10111", "10101", "01111", "00111", "11100", "10000",
             "11001", "00010", "01010",
         ];
-        assert_eq!(get_co2_scrubber_rating(&sample_input), 10);
+        let sample = to_bin_strings(&sample_input);
+        assert_eq!(get_co2_scrubber_rating(&sample), 10);
     }
 }
