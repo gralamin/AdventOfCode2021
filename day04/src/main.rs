@@ -1,3 +1,6 @@
+use day04::load;
+
 fn main() {
-    println!("Hello, world!");
+    let filename = "input";
+    let all_bingo_lines = load(filename).lines();
 }
