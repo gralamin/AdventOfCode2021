@@ -117,9 +117,9 @@ impl SolvableBingoBoard for BingoBoard {
 /// let boards = vec![vec![22, 13, 17, 11, 0, 8, 2, 23, 4, 24, 21, 9, 14, 16, 7, 6, 10, 3, 18, 5, 1, 12, 20, 15, 19],
 ///                   vec![3, 15, 0, 2, 22, 9, 18, 13, 17, 5, 19, 8, 7, 25, 23, 20, 11, 10, 24, 4, 14, 21, 16, 12, 6],
 ///                   vec![14, 21, 17, 24, 4, 10, 16, 15, 9, 19, 18, 8, 23, 26, 20, 22, 11, 13, 6, 5, 2, 0, 12, 3, 7,]];
-/// assert_eq!(day04::puzzle_a(numbers, boards), 4512);
+/// assert_eq!(day04::puzzle_a(&numbers, &boards), 4512);
 /// ```
-pub fn puzzle_a(called_numbers: Vec<i32>, boards: Vec<Vec<i32>>) -> i32 {
+pub fn puzzle_a(called_numbers: &Vec<i32>, boards: &Vec<Vec<i32>>) -> i32 {
     // Theoretically we could skip to the first 4 numbers called, as there cannot be a bingo until the
     // fifth number, but not going to bother optimizing that.
     let mut board_vec: Vec<BingoBoard> = boards
@@ -143,6 +143,77 @@ pub fn puzzle_a(called_numbers: Vec<i32>, boards: Vec<Vec<i32>>) -> i32 {
     }
     // If we don't get a bingo throw a number I know is wrong
     return -999;
+}
+
+pub fn split_lines_by_blanks(lines: &str) -> Vec<Vec<String>> {
+    let result: Vec<Vec<String>> = Vec::new();
+
+    let mut cur_break: Vec<String> = Vec::new();
+    for cur_line in lines.lines() {}
+
+    return result;
+}
+
+/// Input parsing, split all the numbers into boards.
+///
+/// This remains here as it seems fairly specific to this input
+///
+/// ```
+/// let ins = vec![
+///   vec!["22 13 17 11  0", " 8  2 23  4 24", "21  9 14 16  7", " 6 10  3 18  5", " 1 12 20 15 19"].iter().map(|s| s.to_string()).collect(),
+///   vec![" 3 15  0  2 22", " 9 18 13 17  5", "19  8  7 25 23", "20 11 10 24  4", "14 21 16 12  6"].iter().map(|s| s.to_string()).collect(),
+///   vec!["14 21 17 24  4", "10 16 15  9 19", "18  8 23 26 20", "22 11 13  6  5", " 2  0 12  3  7"].iter().map(|s| s.to_string()).collect(),
+/// ];
+/// let outs = vec![
+///     vec![22, 13, 17, 11, 0, 8, 2, 23, 4, 24, 21, 9, 14, 16, 7, 6, 10, 3, 18, 5, 1, 12, 20, 15, 19],
+///     vec![3, 15, 0, 2, 22, 9, 18, 13, 17, 5, 19, 8, 7, 25, 23, 20, 11, 10, 24, 4, 14, 21, 16, 12, 6],
+///     vec![14, 21, 17, 24, 4, 10, 16, 15, 9, 19, 18, 8, 23, 26, 20, 22, 11, 13, 6, 5, 2, 0, 12, 3, 7,],
+/// ];
+/// assert_eq!(day04::unwrap_boards(ins), outs)
+/// ```
+pub fn unwrap_boards(board_input: Vec<Vec<String>>) -> Vec<Vec<i32>> {
+    // step one, combine each vector of strings into a single single
+    let combined: Vec<String> = board_input.iter().map(|v| v.join(" ")).collect();
+
+    // step two, split by spaces into numbers
+    let numbers: Vec<Vec<i32>> = combined
+        .iter()
+        .map(|board| {
+            board
+                .split(" ")
+                .map(|b| b.trim())
+                .filter(|b| !b.is_empty())
+                .map(|b| b.parse().unwrap())
+                .collect()
+        })
+        .collect();
+
+    return numbers;
+}
+
+/// Input parsing, split the first lines into a bunch of numbers
+///
+/// TODO move this over to filelib
+/// ```
+/// let ins = vec![vec!["7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1".to_string()]];
+/// let outs = vec![7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1];
+/// assert_eq!(day04::parse_csv_i32_lines(ins), outs);
+/// ```
+pub fn parse_csv_i32_lines(lines: Vec<Vec<String>>) -> Vec<i32> {
+    // First, flatten a layer
+    let flattened_lines: Vec<String> = lines.into_iter().flatten().collect();
+    let number_lines: Vec<Vec<i32>> = flattened_lines
+        .iter()
+        .map(|line| {
+            line.split(",")
+                .map(|s| s.trim())
+                .filter(|s| !s.is_empty())
+                .map(|s| s.parse().unwrap())
+                .collect()
+        })
+        .collect();
+    let numbers: Vec<i32> = number_lines.into_iter().flatten().collect();
+    return numbers;
 }
 
 #[cfg(test)]
