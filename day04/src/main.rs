@@ -1,6 +1,7 @@
 use day04::load;
 use day04::parse_csv_i32_lines;
 use day04::puzzle_a;
+use day04::puzzle_b;
 use day04::split_lines_by_blanks;
 use day04::unwrap_boards;
 
@@ -13,4 +14,7 @@ fn main() {
 
     let value = puzzle_a(&numbers_to_call, &boards);
     println!("Solution to 1: {}", value);
+
+    let value_b = puzzle_b(&numbers_to_call, &boards);
+    println!("Solution to 2: {}", value_b);
 }
