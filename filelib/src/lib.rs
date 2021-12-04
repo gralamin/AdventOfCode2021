@@ -31,6 +31,63 @@ pub fn load_as_ints(filename: &str) -> Vec<i32> {
     return strings_to_i32(strings.iter().map(AsRef::as_ref).collect());
 }
 
+/// Input parsing, use blank lines to produce groups
+///
+/// This removes any empty groups.
+/// ```
+/// let ins = "7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1\n\n22 13 17 11  0\n 8  2 23  4 24\n21  9 14 16  7\n 6 10  3 18  5\n 1 12 20 15 19\n\n 3 15  0  2 22\n 9 18 13 17  5\n19  8  7 25 23\n20 11 10 24  4\n14 21 16 12  6\n\n\n14 21 17 24  4\n10 16 15  9 19\n18  8 23 26 20\n22 11 13  6  5\n 2  0 12  3  7";
+/// let outs = vec![
+///    vec!["7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1".to_string()],
+///    vec!["22 13 17 11  0", " 8  2 23  4 24", "21  9 14 16  7", " 6 10  3 18  5", " 1 12 20 15 19"].iter().map(|s| s.to_string()).collect(),
+///    vec![" 3 15  0  2 22", " 9 18 13 17  5", "19  8  7 25 23", "20 11 10 24  4", "14 21 16 12  6"].iter().map(|s| s.to_string()).collect(),
+///    vec!["14 21 17 24  4", "10 16 15  9 19", "18  8 23 26 20", "22 11 13  6  5", " 2  0 12  3  7"].iter().map(|s| s.to_string()).collect(),
+/// ];
+/// assert_eq!(filelib::split_lines_by_blanks(ins), outs);
+/// ```
+pub fn split_lines_by_blanks(lines: &str) -> Vec<Vec<String>> {
+    let mut result: Vec<Vec<String>> = Vec::new();
+
+    let mut cur_break: Vec<String> = Vec::new();
+    for cur_line in lines.lines() {
+        let trimmed = cur_line.trim();
+        if trimmed.is_empty() {
+            result.push(cur_break);
+            cur_break = Vec::new();
+        } else {
+            cur_break.push(cur_line.to_string());
+        }
+    }
+    result.push(cur_break);
+
+    // remove any blank vectors
+    return result.into_iter().filter(|s| !s.is_empty()).collect();
+}
+
+/// Input parsing, split lines into a flat bunch of numbers
+///
+/// Note this flattens everything to one line.
+/// ```
+/// let ins = vec![vec!["7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1".to_string()]];
+/// let outs = vec![7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1];
+/// assert_eq!(filelib::parse_csv_i32_lines(ins), outs);
+/// ```
+pub fn parse_csv_i32_lines(lines: Vec<Vec<String>>) -> Vec<i32> {
+    // First, flatten a layer
+    let flattened_lines: Vec<String> = lines.into_iter().flatten().collect();
+    let number_lines: Vec<Vec<i32>> = flattened_lines
+        .iter()
+        .map(|line| {
+            line.split(",")
+                .map(|s| s.trim())
+                .filter(|s| !s.is_empty())
+                .map(|s| s.parse().unwrap())
+                .collect()
+        })
+        .collect();
+    let numbers: Vec<i32> = number_lines.into_iter().flatten().collect();
+    return numbers;
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
