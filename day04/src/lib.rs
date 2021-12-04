@@ -107,6 +107,44 @@ impl SolvableBingoBoard for BingoBoard {
     }
 }
 
+/// Iterate through the numbers for the solution
+///
+/// This could potentially be a bit slow on large inputs, but not optimizing unless I need to.
+/// I also don't consider if two boards can win at once, in which case I probably want the highest scoring one
+///
+/// ```
+/// let numbers = vec![7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1];
+/// let boards = vec![vec![22, 13, 17, 11, 0, 8, 2, 23, 4, 24, 21, 9, 14, 16, 7, 6, 10, 3, 18, 5, 1, 12, 20, 15, 19],
+///                   vec![3, 15, 0, 2, 22, 9, 18, 13, 17, 5, 19, 8, 7, 25, 23, 20, 11, 10, 24, 4, 14, 21, 16, 12, 6],
+///                   vec![14, 21, 17, 24, 4, 10, 16, 15, 9, 19, 18, 8, 23, 26, 20, 22, 11, 13, 6, 5, 2, 0, 12, 3, 7,]];
+/// assert_eq!(day04::puzzle_a(numbers, boards), 4512);
+/// ```
+pub fn puzzle_a(called_numbers: Vec<i32>, boards: Vec<Vec<i32>>) -> i32 {
+    // Theoretically we could skip to the first 4 numbers called, as there cannot be a bingo until the
+    // fifth number, but not going to bother optimizing that.
+    let mut board_vec: Vec<BingoBoard> = boards
+        .iter()
+        .map(|nums| BingoBoard {
+            height: 5,
+            width: 5,
+            board_numbers: nums.to_vec(),
+            called_numbers: HashSet::new(),
+        })
+        .collect();
+
+    for calling_number in called_numbers.iter() {
+        // iterate by index so we can mutate structure safely
+        for i in 0..board_vec.len() {
+            board_vec[i].mark_number(*calling_number);
+            if board_vec[i].has_bingo() {
+                return board_vec[i].score() * (*calling_number);
+            }
+        }
+    }
+    // If we don't get a bingo throw a number I know is wrong
+    return -999;
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
