@@ -21,6 +21,9 @@ fn get_points_on_line(x1: i32, y1: i32, x2: i32, y2: i32) -> Vec<(i32, i32)> {
 }
 
 /// Function to get all points a line touches
+///
+/// This exploits the fact that we are either vertical 1 by 1, or horizontal 1 by 1
+/// or diagonally 1 by 1.
 fn get_points_on_line_full(
     x1: i32,
     y1: i32,
@@ -29,65 +32,23 @@ fn get_points_on_line_full(
     include_diags: bool,
 ) -> Vec<(i32, i32)> {
     let mut points: Vec<(i32, i32)> = Vec::new();
-    let lower_bound: i32;
-    let higher_bound: i32;
-    if x1 != x2 && y1 == y2 {
-        // horizontal case
-        if x1 > x2 {
-            lower_bound = x2;
-            higher_bound = x1;
-        } else {
-            lower_bound = x1;
-            higher_bound = x2;
-        }
-        for v in lower_bound..=higher_bound {
-            points.push((v, y1));
-        }
-    } else if x1 == x2 && y1 != y2 {
-        // vertical case
-        if y1 > y2 {
-            lower_bound = y2;
-            higher_bound = y1;
-        } else {
-            lower_bound = y1;
-            higher_bound = y2;
-        }
-
-        for v in lower_bound..=higher_bound {
-            points.push((x1, v));
-        }
-    } else if include_diags {
-        // 45 degree diagonal case
-        // 4 possible directions: Bottom left to top right
-        if x1 < x2 && y1 > y2 {
-            // As x1 increases by one, y1 decrases by one
-            for v in x1..=x2 {
-                let y = y1 - (v - x1);
-                points.push((v, y));
-            }
-            // direction 2: top left, to bottom right
-        } else if x1 < x2 && y1 < y2 {
-            // As x1 increases by one, y1 increase by one
-            for v in x1..=x2 {
-                let y = y1 + (v - x1);
-                points.push((v, y));
-            }
-            // direction 3: Top right to bottom left
-        } else if x1 > x2 && y1 < y2 {
-            // as x2 increases by one, y2 decreases by one
-            for v in x2..=x1 {
-                let y = y2 - (v - x2);
-                points.push((v, y));
-            }
-            // Final direction, bottom right to top left
-        } else {
-            // as x2 increases by one, y2 increases by one
-            for v in x2..=x1 {
-                let y = y2 + (v - x2);
-                points.push((v, y));
-            }
-        }
+    if x1 != x2 && y1 != y2 && !include_diags {
+        return points;
     }
+
+    // if we are going to the right, xsign is +1. If no horizontal, 0
+    let xsign = (x2 - x1).signum();
+    // if we aer going down, ysign is +1. If no vert, 0.
+    let ysign = (y2 - y1).signum();
+    let range = if xsign != 0 {
+        (x1 - x2).abs()
+    } else {
+        (y1 - y2).abs()
+    };
+    for i in 0..=range {
+        points.push(((x1 + xsign * i), (y1 + ysign * i)));
+    }
+
     return points;
 }
 
@@ -195,7 +156,7 @@ mod tests {
 
     #[test]
     fn test_get_points_on_line() {
-        let expected_horizontal = vec![(7, 7), (8, 7), (9, 7)];
+        let expected_horizontal = vec![(9, 7), (8, 7), (7, 7)];
         let expected_vertical = vec![(1, 1), (1, 2), (1, 3)];
         assert_eq!(get_points_on_line(1, 1, 1, 3), expected_vertical);
         assert_eq!(get_points_on_line(9, 7, 7, 7), expected_horizontal);
@@ -204,15 +165,17 @@ mod tests {
     #[test]
     fn test_get_points_on_line_diagnonal() {
         let expected_one = vec![(1, 1), (2, 2), (3, 3)];
-        let expected_two = vec![(7, 9), (8, 8), (9, 7)];
+        let expected_two = vec![(9, 7), (8, 8), (7, 9)];
+        let expected_three = vec![(3, 3), (2, 2), (1, 1)];
+        let expected_four = vec![(7, 9), (8, 8), (9, 7)];
         // top left to bottom right
         assert_eq!(get_points_on_line_full(1, 1, 3, 3, true), expected_one);
         // bottom left to top right
         assert_eq!(get_points_on_line_full(9, 7, 7, 9, true), expected_two);
         // bottom right to top left
-        assert_eq!(get_points_on_line_full(3, 3, 1, 1, true), expected_one);
+        assert_eq!(get_points_on_line_full(3, 3, 1, 1, true), expected_three);
         // top right to bottom left
-        assert_eq!(get_points_on_line_full(7, 9, 9, 7, true), expected_two);
+        assert_eq!(get_points_on_line_full(7, 9, 9, 7, true), expected_four);
     }
 
     #[test]
