@@ -1,5 +1,6 @@
 extern crate filelib;
-use std::collections::HashMap;
+//use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 
 pub use filelib::load_no_blanks;
 pub use filelib::parse_line_to_linecoords;
@@ -47,21 +48,18 @@ trait HydroMapMarkable {
 
 /// Best data structure for future problems
 ///
-/// real    0m0.385s
-/// user    0m0.385s
+/// real    0m0.268s
+/// user    0m0.268s
 /// sys     0m0.000s
 struct SparseHydroMap {
-    data: HashMap<(i32, i32), i32>,
+    data: FxHashMap<(i32, i32), i32>,
 }
 
 impl HydroMapMarkable for SparseHydroMap {
     fn mark_line(&mut self, line_points: Vec<(i32, i32)>) {
         for pos in line_points {
-            if self.data.contains_key(&pos) {
-                self.data.insert(pos, self.data[&pos] + 1);
-            } else {
-                self.data.insert(pos, 1);
-            }
+            let counter = self.data.entry(pos).or_insert(0);
+            *counter += 1;
         }
     }
 
@@ -127,8 +125,13 @@ impl HydroMapMarkable for DumbHugeArraySet {
 /// assert_eq!(day05::puzzle_a(&inputs), 5);
 /// ```
 pub fn puzzle_a(line_pairs: &Vec<(i32, i32, i32, i32)>) -> i32 {
+    /*
     let mut map = DumbHugeArraySet {
         data: [[0; 1000]; 1000],
+    };
+    */
+    let mut map = SparseHydroMap {
+        data: FxHashMap::default(),
     };
     for pos_pair in line_pairs {
         let x1 = pos_pair.0;
@@ -161,7 +164,7 @@ pub fn puzzle_a(line_pairs: &Vec<(i32, i32, i32, i32)>) -> i32 {
 /// ```
 pub fn puzzle_b(line_pairs: &Vec<(i32, i32, i32, i32)>) -> i32 {
     let mut map = SparseHydroMap {
-        data: HashMap::new(),
+        data: FxHashMap::default(),
     };
     for pos_pair in line_pairs {
         let x1 = pos_pair.0;
@@ -205,7 +208,7 @@ mod tests {
     #[test]
     fn test_sparse_hydro_map() {
         let mut map = SparseHydroMap {
-            data: HashMap::new(),
+            data: FxHashMap::default(),
         };
         let lines = vec![
             get_points_on_line(0, 9, 5, 9),
@@ -230,7 +233,7 @@ mod tests {
     #[test]
     fn test_sparse_hydro_map_with_diags() {
         let mut map = SparseHydroMap {
-            data: HashMap::new(),
+            data: FxHashMap::default(),
         };
         let lines = vec![
             get_points_on_line_full(0, 9, 5, 9, true),
