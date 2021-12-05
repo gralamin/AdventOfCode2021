@@ -2,19 +2,7 @@ extern crate filelib;
 use std::collections::HashMap;
 
 pub use filelib::load_no_blanks;
-
-pub fn parse_line_to_coords(line: &str) -> (i32, i32, i32, i32) {
-    let vec_version: Vec<Vec<i32>> = line
-        .split("->")
-        .map(|pair| {
-            pair.split(",")
-                .map(|p| p.trim().parse::<i32>().unwrap())
-                .collect()
-        })
-        .collect();
-    let vec_flat: Vec<i32> = vec_version.into_iter().flatten().collect();
-    return (vec_flat[0], vec_flat[1], vec_flat[2], vec_flat[3]);
-}
+pub use filelib::parse_line_to_linecoords;
 
 fn get_points_on_line(x1: i32, y1: i32, x2: i32, y2: i32) -> Vec<(i32, i32)> {
     return get_points_on_line_full(x1, y1, x2, y2, false);
@@ -224,10 +212,5 @@ mod tests {
             map.mark_line(line);
         }
         assert_eq!(map.get_points_with_gte(2).len(), 12);
-    }
-
-    #[test]
-    fn test_parse_line_to_coords() {
-        assert_eq!(parse_line_to_coords("6,4 -> 2,0"), (6, 4, 2, 0));
     }
 }
