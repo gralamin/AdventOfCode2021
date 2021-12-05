@@ -45,6 +45,11 @@ trait HydroMapMarkable {
     fn get_points_with_gte(&self, minimum: i32) -> Vec<(i32, i32)>;
 }
 
+/// Best data structure for future problems
+///
+/// real    0m0.385s
+/// user    0m0.385s
+/// sys     0m0.000s
 struct SparseHydroMap {
     data: HashMap<(i32, i32), i32>,
 }
@@ -71,6 +76,37 @@ impl HydroMapMarkable for SparseHydroMap {
     }
 }
 
+/// What if I don't bother with spareness, Its only a million ints.
+///
+/// real    0m0.051s
+/// user    0m0.041s
+/// sys     0m0.010s
+struct DumbHugeArraySet {
+    data: [[i32; 1000]; 1000],
+}
+
+impl HydroMapMarkable for DumbHugeArraySet {
+    fn mark_line(&mut self, line_points: Vec<(i32, i32)>) {
+        for pos in line_points {
+            let x: usize = pos.0.try_into().unwrap();
+            let y: usize = pos.1.try_into().unwrap();
+            self.data[x][y] += 1;
+        }
+    }
+
+    fn get_points_with_gte(&self, minimum: i32) -> Vec<(i32, i32)> {
+        let mut result: Vec<(i32, i32)> = Vec::new();
+        for x in 0..1000 {
+            for y in 0..1000 {
+                if self.data[x][y] >= minimum {
+                    result.push((x.try_into().unwrap(), y.try_into().unwrap()));
+                }
+            }
+        }
+        return result;
+    }
+}
+
 /// Solution to the first puzzle.
 ///
 /// Mark all the lines in a sparse map, then grab every point in the map with a minimum of two
@@ -91,8 +127,8 @@ impl HydroMapMarkable for SparseHydroMap {
 /// assert_eq!(day05::puzzle_a(&inputs), 5);
 /// ```
 pub fn puzzle_a(line_pairs: &Vec<(i32, i32, i32, i32)>) -> i32 {
-    let mut map = SparseHydroMap {
-        data: HashMap::new(),
+    let mut map = DumbHugeArraySet {
+        data: [[0; 1000]; 1000]
     };
     for pos_pair in line_pairs {
         let x1 = pos_pair.0;
