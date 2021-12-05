@@ -65,6 +65,40 @@ impl HydroMapMarkable for SparseHydroMap {
     }
 }
 
+/// Solution to the first puzzle.
+///
+/// Mark all the lines in a sparse map, then grab every point in the map with a minimum of two
+/// If we needed faster then this, I would have to break out the geometry.
+/// ```
+/// let inputs = vec![
+///                   (0, 9, 5, 9),
+///                   (8, 0, 0, 8),
+///                   (9, 4, 3, 4),
+///                   (2, 2, 2, 1),
+///                   (7, 0, 7, 4),
+///                   (6, 4, 2, 0),
+///                   (0, 9, 2, 9),
+///                   (3, 4, 1, 4),
+///                   (0, 0, 8, 8),
+///                   (5, 5, 8, 2),
+/// ];
+/// assert_eq!(day05::puzzle_a(inputs), 5);
+/// ```
+pub fn puzzle_a(line_pairs: Vec<(i32, i32, i32, i32)>) -> i32 {
+    let mut map = SparseHydroMap {
+        data: HashMap::new(),
+    };
+    for pos_pair in line_pairs {
+        let x1 = pos_pair.0;
+        let y1 = pos_pair.1;
+        let x2 = pos_pair.2;
+        let y2 = pos_pair.3;
+        let all_points = get_points_on_line(x1, y1, x2, y2);
+        map.mark_line(all_points);
+    }
+    return map.get_points_with_gte(2).len().try_into().unwrap();
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
