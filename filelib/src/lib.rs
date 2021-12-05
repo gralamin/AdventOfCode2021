@@ -128,6 +128,6 @@ mod tests {
 
     #[test]
     fn test_parse_line_to_coords() {
-        assert_eq!(parse_line_to_coords("6,4 -> 2,0"), (6, 4, 2, 0));
+        assert_eq!(parse_line_to_linecoords("6,4 -> 2,0"), (6, 4, 2, 0));
     }
 }
