@@ -48,8 +48,14 @@ trait HydroMapMarkable {
 
 /// Best data structure for future problems
 ///
+/// As a builtin hashmap:
 /// real    0m0.268s
 /// user    0m0.268s
+/// sys     0m0.000s
+///
+/// With FxHashMap
+/// real    0m0.179s
+/// user    0m0.179s
 /// sys     0m0.000s
 struct SparseHydroMap {
     data: FxHashMap<(i32, i32), i32>,
