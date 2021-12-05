@@ -128,7 +128,7 @@ impl HydroMapMarkable for DumbHugeArraySet {
 /// ```
 pub fn puzzle_a(line_pairs: &Vec<(i32, i32, i32, i32)>) -> i32 {
     let mut map = DumbHugeArraySet {
-        data: [[0; 1000]; 1000]
+        data: [[0; 1000]; 1000],
     };
     for pos_pair in line_pairs {
         let x1 = pos_pair.0;
