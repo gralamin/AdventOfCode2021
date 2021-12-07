@@ -5,10 +5,14 @@ Advent of Code for 2021 - https://adventofcode.com/2021
 
 Per day, remember to:
 ```
-export day=day02
+export day=day07
 cargo new $day
 cp helloworld/Makefile $day/
 touch $day/README.md
+touch $day/input
+touch $day/src/lib.rs
+git add $day
+git commit -m "$day: Added template"
 ```
 
 By convention for this repo, so I can ignore it, all programs will be called `<foldername>.day` eg `day01.day`.
