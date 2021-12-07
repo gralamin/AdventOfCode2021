@@ -8,6 +8,7 @@ fn get_fuel_cost_to_align(initial_pos: &Vec<i32>, final_pos: i32) -> i32 {
 }
 
 fn get_fuel_cost_to_align_increasing(initial_pos: &Vec<i32>, final_pos: i32) -> i32 {
+    // increasing cost is just the sum of numbers of the original cost.
     return initial_pos
         .iter()
         .map(|s| (final_pos - s).abs())
@@ -24,7 +25,7 @@ fn binary_search_fuel(
     upper_bound: i32,
     increasing_cost: bool,
 ) -> (i32, i32) {
-    // If we ever cross, I've screwed up
+    // closure to contain logic of increasing cost
     let get_cost = |num| {
         if !increasing_cost {
             return get_fuel_cost_to_align(crab_pos, num);
@@ -33,9 +34,11 @@ fn binary_search_fuel(
         }
     };
 
+    // If we ever cross, I've screwed up
     if lower_bound > upper_bound {
         return (i32::MAX, i32::MAX);
     }
+    // Only one spot, return this value.
     if lower_bound == upper_bound {
         return (lower_bound, get_cost(lower_bound));
     }
@@ -44,6 +47,7 @@ fn binary_search_fuel(
     let lowest_cost = get_cost(lowest_pos);
 
     // if we are exactly one different, we can end up in an infinite loop.
+    // might be equivalent to subtract / add 1 to some of these, but this is good enough.
     let left_upper_bound = if (lower_bound - lowest_pos).abs() > 1 {
         lowest_pos
     } else {
