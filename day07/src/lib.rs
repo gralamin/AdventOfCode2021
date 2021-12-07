@@ -3,6 +3,18 @@ extern crate filelib;
 pub use filelib::load;
 pub use filelib::parse_csv_i32_lines;
 
+struct CrabCostSolution {
+    position: i32,
+    fuel_cost: i32,
+}
+
+fn build_crab_cost_solution(position: i32, fuel_cost: i32) -> CrabCostSolution {
+    return CrabCostSolution {
+        position: position,
+        fuel_cost: fuel_cost,
+    };
+}
+
 fn get_fuel_cost_to_align(initial_pos: &Vec<i32>, final_pos: i32) -> i32 {
     return initial_pos.iter().map(|s| (final_pos - s).abs()).sum();
 }
@@ -24,7 +36,7 @@ fn binary_search_fuel(
     lower_bound: i32,
     upper_bound: i32,
     increasing_cost: bool,
-) -> (i32, i32) {
+) -> CrabCostSolution {
     // closure to contain logic of increasing cost
     let get_cost = |num| {
         if !increasing_cost {
@@ -34,45 +46,35 @@ fn binary_search_fuel(
         }
     };
 
-    // If we ever cross, I've screwed up
+    // If we ever cross, we have nonsense as results, make sure its never picked.
     if lower_bound > upper_bound {
-        return (i32::MAX, i32::MAX);
+        return build_crab_cost_solution(i32::MAX, i32::MAX);
     }
     // Only one spot, return this value.
     if lower_bound == upper_bound {
-        return (lower_bound, get_cost(lower_bound));
+        return build_crab_cost_solution(lower_bound, get_cost(lower_bound));
     }
 
     let lowest_pos = (lower_bound + upper_bound) / 2;
     let lowest_cost = get_cost(lowest_pos);
 
-    // if we are exactly one different, we can end up in an infinite loop.
-    // might be equivalent to subtract / add 1 to some of these, but this is good enough.
-    let left_upper_bound = if (lower_bound - lowest_pos).abs() > 1 {
-        lowest_pos
-    } else {
-        lower_bound
-    };
-    let right_lower_bound = if { upper_bound - lowest_pos }.abs() > 1 {
-        lowest_pos
-    } else {
-        upper_bound
-    };
+    let left_upper_bound = lowest_pos - 1;
+    let right_lower_bound = lowest_pos + 1;
 
-    let left_tree_tuple =
+    let left_tree_result =
         binary_search_fuel(crab_pos, lower_bound, left_upper_bound, increasing_cost);
-    if left_tree_tuple.1 < lowest_cost {
+    if left_tree_result.fuel_cost < lowest_cost {
         // If its decreasing to the left, then to the right it must be increasing.
-        return left_tree_tuple;
+        return left_tree_result;
     }
-    let right_tree_tuple =
+    let right_tree_result =
         binary_search_fuel(crab_pos, right_lower_bound, upper_bound, increasing_cost);
-    if right_tree_tuple.1 < lowest_cost {
+    if right_tree_result.fuel_cost < lowest_cost {
         // If its decreasing to the right, then the left must be increasing.
-        return right_tree_tuple;
+        return right_tree_result;
     }
     // We got it right first try
-    return (lowest_pos, lowest_cost);
+    return build_crab_cost_solution(lowest_pos, lowest_cost);
 }
 
 /// Get the least cost position to move to, but only return the cost.
@@ -84,10 +86,9 @@ fn binary_search_fuel(
 pub fn puzzle_a(crab_pos: &Vec<i32>) -> i32 {
     let lowest_value = crab_pos.iter().min().unwrap();
     let highest_value = crab_pos.iter().max().unwrap();
-    let tuple = binary_search_fuel(crab_pos, *lowest_value, *highest_value, false);
-    let _position = tuple.0;
-    let cost = tuple.1;
-    return cost;
+    let crab_cost = binary_search_fuel(crab_pos, *lowest_value, *highest_value, false);
+    let _position = crab_cost.position;
+    return crab_cost.fuel_cost;
 }
 
 /// Get the least cost position to move to, but only return the cost.
@@ -100,10 +101,8 @@ pub fn puzzle_a(crab_pos: &Vec<i32>) -> i32 {
 pub fn puzzle_b(crab_pos: &Vec<i32>) -> i32 {
     let lowest_value = crab_pos.iter().min().unwrap();
     let highest_value = crab_pos.iter().max().unwrap();
-    let tuple = binary_search_fuel(crab_pos, *lowest_value, *highest_value, true);
-    let _position = tuple.0;
-    let cost = tuple.1;
-    return cost;
+    let crab_cost = binary_search_fuel(crab_pos, *lowest_value, *highest_value, true);
+    return crab_cost.fuel_cost;
 }
 
 #[cfg(test)]
@@ -132,8 +131,8 @@ mod tests {
         let lowest_value = crab_pos.iter().min().unwrap();
         let highest_value = crab_pos.iter().max().unwrap();
         let returned = binary_search_fuel(&crab_pos, *lowest_value, *highest_value, false);
-        assert_eq!(returned.0, 2);
-        assert_eq!(returned.1, 37);
+        assert_eq!(returned.position, 2);
+        assert_eq!(returned.fuel_cost, 37);
     }
 
     #[test]
@@ -142,7 +141,7 @@ mod tests {
         let lowest_value = crab_pos.iter().min().unwrap();
         let highest_value = crab_pos.iter().max().unwrap();
         let returned = binary_search_fuel(&crab_pos, *lowest_value, *highest_value, true);
-        assert_eq!(returned.0, 5);
-        assert_eq!(returned.1, 168);
+        assert_eq!(returned.position, 5);
+        assert_eq!(returned.fuel_cost, 168);
     }
 }
