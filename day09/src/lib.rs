@@ -268,8 +268,7 @@ pub fn puzzle_b(numbers: Vec<i32>, width: i32, height: i32) -> i32 {
 mod tests {
     use super::*;
 
-    #[test]
-    fn test_get_board_number() {
+    fn produce_board() -> Board {
         let board_nums = vec![
             2, 1, 9, 9, 9, 4, 3, 2, 1, 0, 3, 9, 8, 7, 8, 9, 4, 9, 2, 1, 9, 8, 5, 6, 7, 8, 9, 8, 9,
             2, 8, 7, 6, 7, 8, 9, 6, 7, 8, 9, 9, 8, 9, 9, 9, 6, 5, 6, 7, 8,
@@ -279,6 +278,12 @@ mod tests {
             height: 5,
             board_numbers: board_nums,
         };
+        return board;
+    }
+
+    #[test]
+    fn test_get_board_number() {
+        let board = produce_board();
         assert_eq!(board.get_number(0, 0), Some(2));
         assert_eq!(board.get_number(9, 0), Some(0));
         assert_eq!(board.get_number(0, 4), Some(9));
@@ -289,16 +294,7 @@ mod tests {
 
     #[test]
     fn test_get_adjacent_coordinates() {
-        let board_nums = vec![
-            2, 1, 9, 9, 9, 4, 3, 2, 1, 0, 3, 9, 8, 7, 8, 9, 4, 9, 2, 1, 9, 8, 5, 6, 7, 8, 9, 8, 9,
-            2, 8, 7, 6, 7, 8, 9, 6, 7, 8, 9, 9, 8, 9, 9, 9, 6, 5, 6, 7, 8,
-        ];
-        let board = Board {
-            width: 10,
-            height: 5,
-            board_numbers: board_nums,
-        };
-
+        let board = produce_board();
         assert_eq!(board.get_adjacent_coordinates(0, 0), vec![(1, 0), (0, 1)]);
         assert_eq!(board.get_adjacent_coordinates(9, 0), vec![(9, 1), (8, 0)]);
         assert_eq!(board.get_adjacent_coordinates(0, 4), vec![(0, 3), (1, 4)]);
@@ -314,15 +310,7 @@ mod tests {
 
     #[test]
     fn test_check_if_low_point() {
-        let board_nums = vec![
-            2, 1, 9, 9, 9, 4, 3, 2, 1, 0, 3, 9, 8, 7, 8, 9, 4, 9, 2, 1, 9, 8, 5, 6, 7, 8, 9, 8, 9,
-            2, 8, 7, 6, 7, 8, 9, 6, 7, 8, 9, 9, 8, 9, 9, 9, 6, 5, 6, 7, 8,
-        ];
-        let board = Board {
-            width: 10,
-            height: 5,
-            board_numbers: board_nums,
-        };
+        let board = produce_board();
         assert_eq!(check_if_low_point(&board, 0, 0), false);
         assert_eq!(check_if_low_point(&board, 1, 0), true);
         assert_eq!(check_if_low_point(&board, 2, 2), true);
@@ -333,15 +321,7 @@ mod tests {
 
     #[test]
     fn test_find_basin_by_low_point() {
-        let board_nums = vec![
-            2, 1, 9, 9, 9, 4, 3, 2, 1, 0, 3, 9, 8, 7, 8, 9, 4, 9, 2, 1, 9, 8, 5, 6, 7, 8, 9, 8, 9,
-            2, 8, 7, 6, 7, 8, 9, 6, 7, 8, 9, 9, 8, 9, 9, 9, 6, 5, 6, 7, 8,
-        ];
-        let board = Board {
-            width: 10,
-            height: 5,
-            board_numbers: board_nums,
-        };
+        let board = produce_board();
         assert_eq!(
             find_basin_by_low_point(&board, 0, 0),
             vec![(0, 0), (0, 1), (1, 0)]
