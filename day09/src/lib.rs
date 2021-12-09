@@ -82,36 +82,18 @@ impl BoardTraversable for Board {
         y: i32,
         direction: Direction,
     ) -> (Option<i32>, Option<i32>) {
+        let mut new_x = x;
+        let mut new_y = y;
         match direction {
-            Direction::NORTH => {
-                // Can't go North at top edge
-                if y == 0 {
-                    return (None, None);
-                }
-                return (Some(x), Some(y - 1));
-            }
-            Direction::EAST => {
-                // Can't go east because at right edge
-                if x == self.width - 1 {
-                    return (None, None);
-                }
-                return (Some(x + 1), Some(y));
-            }
-            Direction::SOUTH => {
-                // Can't go down because at bottom
-                if y == self.height - 1 {
-                    return (None, None);
-                }
-                return (Some(x), Some(y + 1));
-            }
-            Direction::WEST => {
-                // Can't go east because at left edge
-                if x == 0 {
-                    return (None, None);
-                }
-                return (Some(x - 1), Some(y));
-            }
+            Direction::NORTH => new_y -= 1,
+            Direction::EAST => new_x += 1,
+            Direction::SOUTH => new_y += 1,
+            Direction::WEST => new_x -= 1,
         }
+        if new_x < 0 || new_y < 0 || new_x > self.width - 1 || new_y > self.height - 1 {
+            return (None, None);
+        }
+        return (Some(new_x), Some(new_y));
     }
 
     fn get_adjacent_coordinates(&self, x: i32, y: i32) -> Vec<(i32, i32)> {
