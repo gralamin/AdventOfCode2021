@@ -2,6 +2,37 @@ extern crate filelib;
 
 pub use filelib::load;
 
+/// Get size of the board
+///
+/// ```
+/// let input = "2199943210\n3987894921\n9856789892\n8767896789\n9899965678";
+/// assert_eq!(day09::get_board_size(input), (10, 5));
+/// ```
+pub fn get_board_size(input: &str) -> (i32, i32) {
+    let nonempty_lines: Vec<&str> = input.lines().filter(|x| !x.trim().is_empty()).collect();
+    let height = nonempty_lines.len();
+    let width = nonempty_lines.iter().nth(0).unwrap().trim().len();
+
+    return (width.try_into().unwrap(), height.try_into().unwrap());
+}
+
+/// Get all num chars from an input string as a unique integer
+/// ```
+/// let expected = vec![
+///     2, 1, 9, 9, 9, 4, 3, 2, 1, 0, 3, 9, 8, 7, 8, 9, 4, 9, 2, 1, 9, 8, 5, 6, 7, 8, 9, 8, 9,
+///     2, 8, 7, 6, 7, 8, 9, 6, 7, 8, 9, 9, 8, 9, 9, 9, 6, 5, 6, 7, 8,
+/// ];
+/// let input = "2199943210\n3987894921\n9856789892\n8767896789\n9899965678";
+/// assert_eq!(day09::extract_all_nums(input), expected);
+/// ```
+pub fn extract_all_nums(input: &str) -> Vec<i32> {
+    return input
+        .chars()
+        .filter(|x| x.is_numeric())
+        .map(|x| x as i32 - '0' as i32)
+        .collect();
+}
+
 #[derive(Debug)]
 enum Direction {
     NORTH,
@@ -125,7 +156,7 @@ fn check_if_low_point(board: &Board, x: i32, y: i32) -> bool {
     if let Some(this_num) = board.get_number(x, y) {
         for (o_x, o_y) in board.get_adjacent_coordinates(x, y) {
             if let Some(cur_num) = board.get_number(o_x, o_y) {
-                if cur_num < this_num {
+                if cur_num <= this_num {
                     return false;
                 }
             }
@@ -224,11 +255,11 @@ mod tests {
             height: 5,
             board_numbers: board_nums,
         };
-        assert_eq!(check_if_low_point(&board, 0,0), false);
-        assert_eq!(check_if_low_point(&board, 1,0), true);
-        assert_eq!(check_if_low_point(&board, 2,2), true);
-        assert_eq!(check_if_low_point(&board, 0,1), false);
-        assert_eq!(check_if_low_point(&board, 0,2), false);
-        assert_eq!(check_if_low_point(&board, 4,1), false);
+        assert_eq!(check_if_low_point(&board, 0, 0), false);
+        assert_eq!(check_if_low_point(&board, 1, 0), true);
+        assert_eq!(check_if_low_point(&board, 2, 2), true);
+        assert_eq!(check_if_low_point(&board, 0, 1), false);
+        assert_eq!(check_if_low_point(&board, 0, 2), false);
+        assert_eq!(check_if_low_point(&board, 4, 1), false);
     }
 }
