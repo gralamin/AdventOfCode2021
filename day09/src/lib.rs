@@ -1,6 +1,7 @@
 extern crate filelib;
 
 pub use filelib::load;
+use std::collections::HashSet;
 
 /// Get size of the board
 ///
@@ -196,6 +197,73 @@ pub fn puzzle_a(numbers: Vec<i32>, width: i32, height: i32) -> i32 {
     return total_risk_level;
 }
 
+fn find_basin_by_low_point(board: &Board, x: i32, y: i32) -> Vec<(i32, i32)> {
+    let mut visited: HashSet<(i32, i32)> = HashSet::new();
+    let mut queue_to_visit: Vec<(i32, i32)> = vec![(x, y)];
+    let mut coords: Vec<(i32, i32)> = Vec::new();
+
+    // Search until you hit a 9, Breadth first.
+    while !queue_to_visit.is_empty() {
+        if let Some(coord_tuple) = queue_to_visit.pop() {
+            let (cur_x, cur_y) = coord_tuple;
+            if visited.contains(&(cur_x, cur_y)) {
+                continue;
+            }
+            visited.insert((cur_x, cur_y));
+
+            if let Some(value) = board.get_number(cur_x, cur_y) {
+                if value == 9 {
+                    continue;
+                }
+            }
+            coords.push((cur_x, cur_y));
+
+            let adjacents = board.get_adjacent_coordinates(cur_x, cur_y);
+            for coord in adjacents {
+                queue_to_visit.push(coord);
+            }
+        }
+    }
+
+    return coords;
+}
+
+/// From the low points, find the basins, get the largest three, and multiply together
+///
+/// ```
+/// let board_nums = vec![
+///     2, 1, 9, 9, 9, 4, 3, 2, 1, 0, 3, 9, 8, 7, 8, 9, 4, 9, 2, 1, 9, 8, 5, 6, 7, 8, 9, 8, 9,
+///     2, 8, 7, 6, 7, 8, 9, 6, 7, 8, 9, 9, 8, 9, 9, 9, 6, 5, 6, 7, 8,
+/// ];
+/// assert_eq!(day09::puzzle_b(board_nums, 10, 5), 1134);
+/// ```
+pub fn puzzle_b(numbers: Vec<i32>, width: i32, height: i32) -> i32 {
+    let board = Board {
+        width: width,
+        height: height,
+        board_numbers: numbers,
+    };
+
+    let mut basins: Vec<Vec<(i32, i32)>> = Vec::new();
+
+    for x in 0..width {
+        for y in 0..height {
+            let is_lowpoint: bool = check_if_low_point(&board, x, y);
+            if is_lowpoint {
+                basins.push(find_basin_by_low_point(&board, x, y));
+            }
+        }
+    }
+
+    basins.sort_by(|a, b| a.len().partial_cmp(&b.len()).unwrap());
+    basins.reverse();
+
+    let len_one: i32 = basins.iter().nth(0).unwrap().len().try_into().unwrap();
+    let len_two: i32 = basins.iter().nth(1).unwrap().len().try_into().unwrap();
+    let len_three: i32 = basins.iter().nth(2).unwrap().len().try_into().unwrap();
+    return len_one * len_two * len_three;
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -261,5 +329,48 @@ mod tests {
         assert_eq!(check_if_low_point(&board, 0, 1), false);
         assert_eq!(check_if_low_point(&board, 0, 2), false);
         assert_eq!(check_if_low_point(&board, 4, 1), false);
+    }
+
+    #[test]
+    fn test_find_basin_by_low_point() {
+        let board_nums = vec![
+            2, 1, 9, 9, 9, 4, 3, 2, 1, 0, 3, 9, 8, 7, 8, 9, 4, 9, 2, 1, 9, 8, 5, 6, 7, 8, 9, 8, 9,
+            2, 8, 7, 6, 7, 8, 9, 6, 7, 8, 9, 9, 8, 9, 9, 9, 6, 5, 6, 7, 8,
+        ];
+        let board = Board {
+            width: 10,
+            height: 5,
+            board_numbers: board_nums,
+        };
+        assert_eq!(
+            find_basin_by_low_point(&board, 0, 0),
+            vec![(0, 0), (0, 1), (1, 0)]
+        );
+        let basin2: Vec<(i32, i32)> = vec![
+            (9, 0),
+            (8, 0),
+            (7, 0),
+            (6, 0),
+            (5, 0),
+            (6, 1),
+            (8, 1),
+            (9, 1),
+            (9, 2),
+        ];
+        assert_eq!(find_basin_by_low_point(&board, 9, 0), basin2);
+        // too complicated to copy lol
+        assert_eq!(find_basin_by_low_point(&board, 2, 2).len(), 14);
+        let basin4: Vec<(i32, i32)> = vec![
+            (6, 4),
+            (5, 4),
+            (7, 4),
+            (8, 4),
+            (9, 4),
+            (8, 3),
+            (7, 3),
+            (6, 3),
+            (7, 2),
+        ];
+        assert_eq!(find_basin_by_low_point(&board, 6, 4), basin4);
     }
 }
