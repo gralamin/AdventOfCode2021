@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 submarinelib = { path = "../submarinelib" }
 filelib = { path = "../filelib" }
+boardlib = { path = "../boardlib" }

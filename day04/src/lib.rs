@@ -1,4 +1,6 @@
+extern crate boardlib;
 extern crate filelib;
+use crate::boardlib::BoardTraversable;
 use std::collections::HashSet;
 
 pub use filelib::load;
@@ -7,41 +9,28 @@ pub use filelib::split_lines_by_blanks;
 
 trait SolvableBingoBoard {
     fn has_bingo(&self) -> bool;
-    fn score(&self) -> i32;
-    fn mark_number(&mut self, num: i32);
-}
-
-trait BoardIndexable {
-    fn get_number(&self, x: i32, y: i32) -> i32;
+    fn score(&self) -> u32;
+    fn mark_number(&mut self, num: u32);
 }
 
 #[derive(Debug)]
 struct BingoBoard {
-    /* Variable sized boards.
-     *
-     * width * height = board_numbers.len()
-     * index by: x + (y * width)
-     * essentially top left corner is 0,0, right and down increases.
-     */
-    width: i32,
-    height: i32,
-    board_numbers: Vec<i32>,
+    board: boardlib::Board<u32>,
 
     /* Game state variables
      *
      * We currently need to know which numbers are marked only.
      */
-    called_numbers: HashSet<i32>,
+    called_numbers: HashSet<u32>,
 }
 
-impl BoardIndexable for BingoBoard {
-    fn get_number(&self, x: i32, y: i32) -> i32 {
-        if y >= self.height || x >= self.width {
-            // y cannot exceed height, x cannot exceed width
-            return -999;
-        }
-        let pos: usize = (x + (y * self.width)).try_into().unwrap();
-        return *(self.board_numbers.iter().nth(pos).unwrap());
+impl BingoBoard {
+    fn new(width: usize, height: usize, values: Vec<i32>) -> BingoBoard {
+        let converted: Vec<u32> = values.iter().map(|x| (*x).try_into().unwrap()).collect();
+        return BingoBoard {
+            board: boardlib::Board::new(width, height, converted),
+            called_numbers: HashSet::new(),
+        };
     }
 }
 
@@ -52,14 +41,15 @@ impl SolvableBingoBoard for BingoBoard {
     /// Assuming lookup of numbers in my set_hash is O(1)
     fn has_bingo(&self) -> bool {
         // columns: on a given x go down all the ys
-        for x in 0..self.width {
+        for x in 0..self.board.get_width() {
             let mut is_bingo = true;
-            for y in 0..self.height {
-                let cur_num = self.get_number(x, y);
-                if !self.called_numbers.contains(&cur_num) {
-                    // find one miss, skip
-                    is_bingo = false;
-                    break;
+            for y in 0..self.board.get_height() {
+                if let Some(cur_num) = self.board.get_value(boardlib::BoardCoordinate::new(x, y)) {
+                    if !self.called_numbers.contains(&cur_num) {
+                        // find one miss, skip
+                        is_bingo = false;
+                        break;
+                    }
                 }
             }
             // first bingo we find, quit
@@ -69,14 +59,15 @@ impl SolvableBingoBoard for BingoBoard {
         }
 
         // No column has bingo, check rows.
-        for y in 0..self.height {
+        for y in 0..self.board.get_height() {
             let mut is_bingo = true;
-            for x in 0..self.width {
-                let cur_num = self.get_number(x, y);
-                if !self.called_numbers.contains(&cur_num) {
-                    // find one miss, skip
-                    is_bingo = false;
-                    break;
+            for x in 0..self.board.get_width() {
+                if let Some(cur_num) = self.board.get_value(boardlib::BoardCoordinate::new(x, y)) {
+                    if !self.called_numbers.contains(&cur_num) {
+                        // find one miss, skip
+                        is_bingo = false;
+                        break;
+                    }
                 }
             }
             // first bingo we find, quit
@@ -91,20 +82,21 @@ impl SolvableBingoBoard for BingoBoard {
     ///
     /// O(n) by nature of iterating over the board.
     /// Assuming lookup of numbers in my set_hash is O(1)
-    fn score(&self) -> i32 {
-        let mut total = 0;
-        for y in 0..self.height {
-            for x in 0..self.width {
-                let cur_num = self.get_number(x, y);
-                if !self.called_numbers.contains(&cur_num) {
-                    total += cur_num;
+    fn score(&self) -> u32 {
+        let mut total: u32 = 0;
+        for y in 0..self.board.get_height() {
+            for x in 0..self.board.get_width() {
+                if let Some(cur_num) = self.board.get_value(boardlib::BoardCoordinate::new(x, y)) {
+                    if !self.called_numbers.contains(&cur_num) {
+                        total += cur_num;
+                    }
                 }
             }
         }
         return total;
     }
 
-    fn mark_number(&mut self, num: i32) {
+    fn mark_number(&mut self, num: u32) {
         self.called_numbers.insert(num);
     }
 }
@@ -121,30 +113,26 @@ impl SolvableBingoBoard for BingoBoard {
 ///                   vec![14, 21, 17, 24, 4, 10, 16, 15, 9, 19, 18, 8, 23, 26, 20, 22, 11, 13, 6, 5, 2, 0, 12, 3, 7,]];
 /// assert_eq!(day04::puzzle_a(&numbers, &boards), 4512);
 /// ```
-pub fn puzzle_a(called_numbers: &Vec<i32>, boards: &Vec<Vec<i32>>) -> i32 {
+pub fn puzzle_a(called_numbers: &Vec<i32>, boards: &Vec<Vec<i32>>) -> u32 {
     // Theoretically we could skip to the first 4 numbers called, as there cannot be a bingo until the
     // fifth number, but not going to bother optimizing that.
     let mut board_vec: Vec<BingoBoard> = boards
         .iter()
-        .map(|nums| BingoBoard {
-            height: 5,
-            width: 5,
-            board_numbers: nums.to_vec(),
-            called_numbers: HashSet::new(),
-        })
+        .map(|nums| BingoBoard::new(5, 5, nums.to_vec()))
         .collect();
 
     for calling_number in called_numbers.iter() {
         // iterate by index so we can mutate structure safely
+        let as_u32: u32 = (*calling_number).try_into().unwrap();
         for i in 0..board_vec.len() {
-            board_vec[i].mark_number(*calling_number);
+            board_vec[i].mark_number(as_u32);
             if board_vec[i].has_bingo() {
-                return board_vec[i].score() * (*calling_number);
+                return board_vec[i].score() * as_u32;
             }
         }
     }
     // If we don't get a bingo throw a number I know is wrong
-    return -999;
+    return 0;
 }
 
 /// Iterate through the numbers for the last board to win.
@@ -159,38 +147,34 @@ pub fn puzzle_a(called_numbers: &Vec<i32>, boards: &Vec<Vec<i32>>) -> i32 {
 ///                   vec![14, 21, 17, 24, 4, 10, 16, 15, 9, 19, 18, 8, 23, 26, 20, 22, 11, 13, 6, 5, 2, 0, 12, 3, 7,]];
 /// assert_eq!(day04::puzzle_b(&numbers, &boards), 1924);
 /// ```
-pub fn puzzle_b(called_numbers: &Vec<i32>, boards: &Vec<Vec<i32>>) -> i32 {
+pub fn puzzle_b(called_numbers: &Vec<i32>, boards: &Vec<Vec<i32>>) -> u32 {
     // Theoretically we could skip to the first 4 numbers called, as there cannot be a bingo until the
     // fifth number, but not going to bother optimizing that.
     let mut board_vec: Vec<BingoBoard> = boards
         .iter()
-        .map(|nums| BingoBoard {
-            height: 5,
-            width: 5,
-            board_numbers: nums.to_vec(),
-            called_numbers: HashSet::new(),
-        })
+        .map(|nums| BingoBoard::new(5, 5, nums.to_vec()))
         .collect();
 
     let mut index_bingoed: HashSet<usize> = HashSet::new();
     for calling_number in called_numbers.iter() {
+        let as_u32: u32 = (*calling_number).try_into().unwrap();
         // iterate by index so we can mutate structure safely
         for i in 0..board_vec.len() {
             if index_bingoed.contains(&i) {
                 // already bingoed, ignore it.
                 continue;
             }
-            board_vec[i].mark_number(*calling_number);
+            board_vec[i].mark_number(as_u32);
             if board_vec[i].has_bingo() {
                 index_bingoed.insert(i);
                 if index_bingoed.len() == boards.len() {
-                    return board_vec[i].score() * (*calling_number);
+                    return board_vec[i].score() * as_u32;
                 }
             }
         }
     }
     // If we don't get a bingo throw a number I know is wrong
-    return -999;
+    return 0;
 }
 
 /// Input parsing, split all the numbers into boards.
@@ -234,36 +218,26 @@ pub fn unwrap_boards(board_input: Vec<Vec<String>>) -> Vec<Vec<i32>> {
 mod tests {
     use super::*;
 
-    #[test]
-    fn test_get_number() {
+    fn build_board(called: HashSet<u32>) -> BingoBoard {
         let board = BingoBoard {
-            height: 5,
-            width: 5,
-            board_numbers: vec![
-                14, 21, 17, 24, 4, 10, 16, 15, 9, 19, 18, 8, 23, 26, 20, 22, 11, 13, 6, 5, 2, 0,
-                12, 3, 7,
-            ],
-            called_numbers: HashSet::from([7, 4, 9, 5, 11, 17, 23, 2, 0, 14, 21]),
+            board: boardlib::Board::new(
+                5,
+                5,
+                vec![
+                    14, 21, 17, 24, 4, 10, 16, 15, 9, 19, 18, 8, 23, 26, 20, 22, 11, 13, 6, 5, 2,
+                    0, 12, 3, 7,
+                ],
+            ),
+            called_numbers: called,
         };
-        assert_eq!(board.get_number(0, 0), 14);
-        assert_eq!(board.get_number(4, 0), 4);
-        assert_eq!(board.get_number(0, 4), 2);
-        assert_eq!(board.get_number(4, 4), 7);
-        assert_eq!(board.get_number(2, 2), 23);
+
+        return board;
     }
 
     #[test]
     fn test_has_bingo_and_mark_number() {
         // combining these two, as they naturally work together for an off -> on test.
-        let mut board = BingoBoard {
-            height: 5,
-            width: 5,
-            board_numbers: vec![
-                14, 21, 17, 24, 4, 10, 16, 15, 9, 19, 18, 8, 23, 26, 20, 22, 11, 13, 6, 5, 2, 0,
-                12, 3, 7,
-            ],
-            called_numbers: HashSet::from([7, 4, 9, 5, 11, 17, 23, 2, 0, 14, 21]),
-        };
+        let mut board = build_board(HashSet::from([7, 4, 9, 5, 11, 17, 23, 2, 0, 14, 21]));
         assert_eq!(board.has_bingo(), false);
         board.mark_number(24);
         assert_eq!(board.has_bingo(), true);
@@ -272,15 +246,7 @@ mod tests {
     #[test]
     fn test_score() {
         // combining these two, as they naturally work together for an off -> on test.
-        let board = BingoBoard {
-            height: 5,
-            width: 5,
-            board_numbers: vec![
-                14, 21, 17, 24, 4, 10, 16, 15, 9, 19, 18, 8, 23, 26, 20, 22, 11, 13, 6, 5, 2, 0,
-                12, 3, 7,
-            ],
-            called_numbers: HashSet::from([7, 4, 9, 5, 11, 17, 23, 2, 0, 14, 21, 24]),
-        };
+        let board = build_board(HashSet::from([7, 4, 9, 5, 11, 17, 23, 2, 0, 14, 21, 24]));
         assert_eq!(board.score(), 188);
     }
 }
