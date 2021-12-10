@@ -162,26 +162,6 @@ mod tests {
     }
 
     #[test]
-    fn test_get_board_number() {
-        let board = produce_board();
-        assert_eq!(board.get_number(0, 0), Some(2));
-        assert_eq!(board.get_number(9, 0), Some(0));
-        assert_eq!(board.get_number(0, 4), Some(9));
-        assert_eq!(board.get_number(9, 4), Some(8));
-        assert_eq!(board.get_number(4, 2), Some(7));
-        assert_eq!(board.get_number(5, 2), Some(8));
-    }
-
-    #[test]
-    fn test_get_adjacent_coordinates() {
-        let board = produce_board();
-        assert_eq!(board.get_adjacent_coordinates(0, 0), vec![(1, 0), (0, 1)]);
-        assert_eq!(board.get_adjacent_coordinates(9, 0), vec![(9, 1), (8, 0)]);
-        assert_eq!(board.get_adjacent_coordinates(0, 4), vec![(0, 3), (1, 4)]);
-        assert_eq!(board.get_adjacent_coordinates(9, 4), vec![(9, 3), (8, 4)]);
-    }
-
-    #[test]
     fn test_get_risk_level() {
         assert_eq!(get_risk_level(1), 2);
         assert_eq!(get_risk_level(0), 1);
@@ -210,7 +190,7 @@ mod tests {
                 BoardCoordinate::new(1, 0)
             ]
         );
-        let basin2: Vec<(usize, usize)> = vec![
+        let basin2: Vec<BoardCoordinate> = vec![
             BoardCoordinate::new(9, 0),
             BoardCoordinate::new(8, 0),
             BoardCoordinate::new(7, 0),
@@ -224,7 +204,7 @@ mod tests {
         assert_eq!(find_basin_by_low_point(&board, 9, 0), basin2);
         // too complicated to copy lol
         assert_eq!(find_basin_by_low_point(&board, 2, 2).len(), 14);
-        let basin4: Vec<(usize, usize)> = vec![
+        let basin4: Vec<BoardCoordinate> = vec![
             BoardCoordinate::new(6, 4),
             BoardCoordinate::new(5, 4),
             BoardCoordinate::new(7, 4),
