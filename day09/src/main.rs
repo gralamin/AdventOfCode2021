@@ -12,7 +12,7 @@ fn main() {
     //assert_eq!(height, 100);
     let numbers = extract_all_nums(&input);
     let numbers_b = numbers.clone();
-    let len: i32 = numbers.len().try_into().unwrap();
+    let len = numbers.len();
     assert_eq!(len, width * height);
 
     let value_a = puzzle_a(numbers, width, height);
