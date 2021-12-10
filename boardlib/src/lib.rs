@@ -6,7 +6,7 @@ pub struct BoardCoordinate {
 
 impl BoardCoordinate {
     pub fn new(x: usize, y: usize) -> BoardCoordinate {
-        return BoardCoordinate {x:x, y:y};
+        return BoardCoordinate { x: x, y: y };
     }
 }
 
@@ -16,7 +16,7 @@ impl std::ops::Add for BoardCoordinate {
     fn add(self, other: BoardCoordinate) -> BoardCoordinate {
         return BoardCoordinate {
             x: self.x + other.x,
-            y: self.y + other.y
+            y: self.y + other.y,
         };
     }
 }
@@ -39,11 +39,18 @@ impl<T: Copy> Board<T> {
         return Board {
             width: width,
             height: height,
-            values: values
+            values: values,
         };
     }
-}
 
+    pub fn get_width(&self) -> usize {
+        return self.width;
+    }
+
+    pub fn get_height(&self) -> usize {
+        return self.height;
+    }
+}
 
 #[derive(Debug)]
 pub enum Direction {
@@ -99,7 +106,6 @@ impl<T: Copy> BoardTraversable for Board<T> {
             }
         }
         return None;
-        
     }
 
     fn get_adjacent_coordinates(&self, pos: BoardCoordinate) -> Vec<BoardCoordinate> {
@@ -115,7 +121,7 @@ impl<T: Copy> BoardTraversable for Board<T> {
                 result.push(cur_pos);
             }
         }
-        
+
         return result;
     }
 }
@@ -129,11 +135,7 @@ mod tests {
             2, 1, 9, 9, 9, 4, 3, 2, 1, 0, 3, 9, 8, 7, 8, 9, 4, 9, 2, 1, 9, 8, 5, 6, 7, 8, 9, 8, 9,
             2, 8, 7, 6, 7, 8, 9, 6, 7, 8, 9, 9, 8, 9, 9, 9, 6, 5, 6, 7, 8,
         ];
-        let board: Board<i32> = Board::new(
-            10,
-            5,
-            board_nums,
-        );
+        let board: Board<i32> = Board::new(10, 5, board_nums);
         return board;
     }
 
@@ -151,9 +153,41 @@ mod tests {
     #[test]
     fn test_get_adjacent_coordinates() {
         let board = produce_board();
-        assert_eq!(board.get_adjacent_coordinates(BoardCoordinate::new(0, 0)), vec![BoardCoordinate::new(1, 0), BoardCoordinate::new(0, 1)]);
-        assert_eq!(board.get_adjacent_coordinates(BoardCoordinate::new(9, 0)), vec![BoardCoordinate::new(9, 1), BoardCoordinate::new(8, 0)]);
-        assert_eq!(board.get_adjacent_coordinates(BoardCoordinate::new(0, 4)), vec![BoardCoordinate::new(0, 3), BoardCoordinate::new(1, 4)]);
-        assert_eq!(board.get_adjacent_coordinates(BoardCoordinate::new(9, 4)), vec![BoardCoordinate::new(9, 3), BoardCoordinate::new(8, 4)]);
+        assert_eq!(
+            board.get_adjacent_coordinates(BoardCoordinate::new(0, 0)),
+            vec![BoardCoordinate::new(1, 0), BoardCoordinate::new(0, 1)]
+        );
+        assert_eq!(
+            board.get_adjacent_coordinates(BoardCoordinate::new(9, 0)),
+            vec![BoardCoordinate::new(9, 1), BoardCoordinate::new(8, 0)]
+        );
+        assert_eq!(
+            board.get_adjacent_coordinates(BoardCoordinate::new(0, 4)),
+            vec![BoardCoordinate::new(0, 3), BoardCoordinate::new(1, 4)]
+        );
+        assert_eq!(
+            board.get_adjacent_coordinates(BoardCoordinate::new(9, 4)),
+            vec![BoardCoordinate::new(9, 3), BoardCoordinate::new(8, 4)]
+        );
+    }
+
+    #[test]
+    fn test_get_width() {
+        let board = produce_board();
+        assert_eq!(board.get_width(), 10);
+    }
+
+    #[test]
+    fn test_get_height() {
+        let board = produce_board();
+        assert_eq!(board.get_height(), 5);
+    }
+
+    #[test]
+    fn test_add_coords() {
+        let a = BoardCoordinate::new(3, 5);
+        let b = BoardCoordinate::new(7, 11);
+        let expected = BoardCoordinate::new(10, 16);
+        assert_eq!(a + b, expected);
     }
 }
