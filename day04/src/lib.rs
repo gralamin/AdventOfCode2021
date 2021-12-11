@@ -2,6 +2,7 @@ extern crate boardlib;
 extern crate filelib;
 use crate::boardlib::BoardTraversable;
 use std::collections::HashSet;
+use std::collections::HashMap;
 
 pub use filelib::load;
 pub use filelib::parse_csv_i32_lines;
@@ -41,40 +42,29 @@ impl SolvableBingoBoard for BingoBoard {
     /// Assuming lookup of numbers in my set_hash is O(1)
     fn has_bingo(&self) -> bool {
         // columns: on a given x go down all the ys
-        for x in 0..self.board.get_width() {
-            let mut is_bingo = true;
-            for y in 0..self.board.get_height() {
-                if let Some(cur_num) = self.board.get_value(boardlib::BoardCoordinate::new(x, y)) {
-                    if !self.called_numbers.contains(&cur_num) {
-                        // find one miss, skip
-                        is_bingo = false;
-                        break;
-                    }
+        let mut columns: HashMap<usize, usize> = HashMap::new();
+        let mut rows: HashMap<usize, usize> = HashMap::new();
+        for cur_coord in self.board.coord_iter() {
+            if let Some(cur_num) = self.board.get_value(cur_coord) {
+                if self.called_numbers.contains(&cur_num) {
+                    let column_counter = columns.entry(cur_coord.x).or_insert(0);
+                    *column_counter += 1;
+                    let row_counter = rows.entry(cur_coord.y).or_insert(0);
+                    *row_counter += 1;
                 }
             }
-            // first bingo we find, quit
-            if is_bingo {
+        }
+        for (_, value) in rows {
+            if value == self.board.get_width() {
+                return true;
+            }
+        }
+        for (_, value) in columns {
+            if value == self.board.get_height() {
                 return true;
             }
         }
 
-        // No column has bingo, check rows.
-        for y in 0..self.board.get_height() {
-            let mut is_bingo = true;
-            for x in 0..self.board.get_width() {
-                if let Some(cur_num) = self.board.get_value(boardlib::BoardCoordinate::new(x, y)) {
-                    if !self.called_numbers.contains(&cur_num) {
-                        // find one miss, skip
-                        is_bingo = false;
-                        break;
-                    }
-                }
-            }
-            // first bingo we find, quit
-            if is_bingo {
-                return true;
-            }
-        }
         return false;
     }
 
