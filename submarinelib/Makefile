@@ -16,6 +16,9 @@ format:
 lint:
 	cargo fmt -- --check
 
+coverage:
+	cargo +nightly tarpaulin --verbose --all-features --workspace --timeout 120
+
 all: build
 
-.PHONY: build test all clean format lint
+.PHONY: build test all clean format lint coverage
