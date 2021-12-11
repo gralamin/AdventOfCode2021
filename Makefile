@@ -1,4 +1,4 @@
-TOPTARGETS := build test clean format lint
+TOPTARGETS := build test clean format lint coverage
 
 SUBDIRS := $(wildcard */.)
 
