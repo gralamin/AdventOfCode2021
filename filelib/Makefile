@@ -17,7 +17,7 @@ lint:
 	cargo fmt -- --check
 
 coverage:
-	cargo +nightly tarpaulin --verbose --all-features --workspace --timeout 120
+	cargo +nightly tarpaulin --verbose --all-features --workspace --timeout 120 --run-types Tests,DocTests --fail-under 70
 
 all: build
 
