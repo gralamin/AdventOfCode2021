@@ -50,6 +50,45 @@ impl<T: Copy> Board<T> {
     pub fn get_height(&self) -> usize {
         return self.height;
     }
+
+    pub fn coord_iter(&self) -> BoardIter {
+        return BoardIter {
+            cur_x: 0,
+            cur_y: 0,
+            max_x: self.width,
+            max_y: self.height,
+            first: true,
+        };
+    }
+}
+
+pub struct BoardIter {
+    cur_x: usize,
+    cur_y: usize,
+    max_x: usize,
+    max_y: usize,
+    first: bool,
+}
+
+impl Iterator for BoardIter {
+    type Item = BoardCoordinate;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.first {
+            self.first = false;
+            return Some(BoardCoordinate::new(self.cur_x, self.cur_y));
+        }
+        self.cur_x += 1;
+        if self.cur_x >= self.max_x {
+            self.cur_x = self.cur_x % self.max_x;
+            self.cur_y += 1;
+        }
+        if self.cur_y >= self.max_y {
+            return None;
+        } else {
+            return Some(BoardCoordinate::new(self.cur_x, self.cur_y));
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -181,6 +220,26 @@ mod tests {
     fn test_get_height() {
         let board = produce_board();
         assert_eq!(board.get_height(), 5);
+    }
+
+    #[test]
+    fn test_coord_iter() {
+        let board = produce_board();
+        let mut iter = board.coord_iter();
+        if let Some(first_v) = iter.next() {
+            assert_eq!(first_v, BoardCoordinate::new(0, 0));
+        } else {
+            panic!("No first value found");
+        }
+
+        if let Some(second_v) = iter.next() {
+            assert_eq!(second_v, BoardCoordinate::new(1, 0));
+        } else {
+            panic!("No second value found");
+        }
+
+        let all: Vec<BoardCoordinate> = board.coord_iter().collect();
+        assert_eq!(all.len(), 50);
     }
 
     #[test]
