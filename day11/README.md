@@ -350,6 +350,7 @@ It seems like the individual flashes aren't bright enough to navigate. However, 
 In the example above, the first time all octopuses flash simultaneously is step 195:
 
 After step 193:
+```
 5877777777
 8877777777
 7777777777
@@ -360,6 +361,7 @@ After step 193:
 7777777777
 7777777777
 7777777777
+```
 
 After step 194:
 ```
