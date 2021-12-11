@@ -1,8 +1,8 @@
 extern crate boardlib;
 extern crate filelib;
 use crate::boardlib::BoardTraversable;
-use std::collections::HashSet;
 use std::collections::HashMap;
+use std::collections::HashSet;
 
 pub use filelib::load;
 pub use filelib::parse_csv_i32_lines;
