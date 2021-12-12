@@ -37,6 +37,10 @@ impl LiteGraph {
         return node == "end";
     }
 
+    fn is_start(&self, node: &CaveData) -> bool {
+        return node == "start";
+    }
+
     fn is_large(&self, node: &CaveData) -> bool {
         return node.to_uppercase() == *node;
     }
@@ -59,6 +63,32 @@ fn recurse_walk_counting_paths<'a>(
     return graph
         .adj(node)
         .map(|node| recurse_walk_counting_paths(graph, node, seen.clone()))
+        .sum();
+}
+
+fn recurse_walk_counting_paths_allow_a_double<'a>(
+    graph: &LiteGraph,
+    node: &'a CaveData,
+    mut seen: HashSet<&'a CaveData>,
+    mut double: bool,
+) -> usize {
+    if seen.contains(&node) {
+        if double {
+            return 0;
+        } else {
+            double = true;
+        }
+    }
+    if graph.is_end(node) {
+        return 1;
+    }
+    if !graph.is_large(node) {
+        seen.insert(node);
+    }
+    return graph
+        .adj(node)
+        .filter(|&node| !graph.is_start(node))
+        .map(|node| recurse_walk_counting_paths_allow_a_double(graph, node, seen.clone(), double))
         .sum();
 }
 
@@ -94,6 +124,45 @@ pub fn puzzle_a(input: &Vec<String>) -> usize {
         graph.add_undirected_edge(&src.to_string(), &dst.to_string());
     }
     return recurse_walk_counting_paths(&graph, &"start".to_string(), HashSet::new());
+}
+
+/// Walk through all the paths visting small caves only once, except for one double
+///
+/// ```
+/// let input = vec![
+///     "fs-end".to_string(),
+///     "he-DX".to_string(),
+///     "fs-he".to_string(),
+///     "start-DX".to_string(),
+///     "pj-DX".to_string(),
+///     "end-zg".to_string(),
+///     "zg-sl".to_string(),
+///     "zg-pj".to_string(),
+///     "pj-he".to_string(),
+///     "RW-he".to_string(),
+///     "fs-DX".to_string(),
+///     "pj-RW".to_string(),
+///     "zg-RW".to_string(),
+///     "start-pj".to_string(),
+///     "he-WI".to_string(),
+///     "zg-he".to_string(),
+///     "pj-fs".to_string(),
+///     "start-RW".to_string(),
+/// ];
+/// assert_eq!(day12::puzzle_b(&input), 3509);
+/// ```
+pub fn puzzle_b(input: &Vec<String>) -> usize {
+    let mut graph = LiteGraph::new();
+    for line in input.iter() {
+        let (src, dst) = line.split_once("-").unwrap();
+        graph.add_undirected_edge(&src.to_string(), &dst.to_string());
+    }
+    return recurse_walk_counting_paths_allow_a_double(
+        &graph,
+        &"start".to_string(),
+        HashSet::new(),
+        false,
+    );
 }
 
 #[cfg(test)]
@@ -151,6 +220,15 @@ mod tests {
         assert_eq!(
             recurse_walk_counting_paths(&graph, &start, HashSet::new()),
             10
+        );
+    }
+
+    #[test]
+    fn test_recurse_walk_counting_path_a_doubles() {
+        let (graph, start, _) = make_cave_systems();
+        assert_eq!(
+            recurse_walk_counting_paths_allow_a_double(&graph, &start, HashSet::new(), false),
+            36
         );
     }
 }
