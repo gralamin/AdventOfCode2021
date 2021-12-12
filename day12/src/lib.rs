@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use rustc_hash::{FxHashMap, FxHashSet};
 
 pub use filelib::load_no_blanks;
 
@@ -7,13 +7,13 @@ type CaveData = String;
 
 #[derive(Debug)]
 struct LiteGraph {
-    adjacencies: HashMap<CaveData, Vec<CaveData>>,
+    adjacencies: FxHashMap<CaveData, Vec<CaveData>>,
 }
 
 impl LiteGraph {
     fn new() -> Self {
         return Self {
-            adjacencies: HashMap::new(),
+            adjacencies: FxHashMap::default(),
         };
     }
 
@@ -49,7 +49,7 @@ impl LiteGraph {
 fn recurse_walk_counting_paths<'a>(
     graph: &LiteGraph,
     node: &'a CaveData,
-    mut seen: HashSet<&'a CaveData>,
+    mut seen: FxHashSet<&'a CaveData>,
 ) -> usize {
     if seen.contains(&node) {
         return 0;
@@ -66,10 +66,16 @@ fn recurse_walk_counting_paths<'a>(
         .sum();
 }
 
+// Not happy with this solution due to time it takes
+// Solution to 2: 96528
+//
+// real    0m1.427s
+// user    0m1.427s
+// sys     0m0.000s
 fn recurse_walk_counting_paths_allow_a_double<'a>(
     graph: &LiteGraph,
     node: &'a CaveData,
-    mut seen: HashSet<&'a CaveData>,
+    mut seen: FxHashSet<&'a CaveData>,
     mut double: bool,
 ) -> usize {
     if seen.contains(&node) {
@@ -123,7 +129,7 @@ pub fn puzzle_a(input: &Vec<String>) -> usize {
         let (src, dst) = line.split_once("-").unwrap();
         graph.add_undirected_edge(&src.to_string(), &dst.to_string());
     }
-    return recurse_walk_counting_paths(&graph, &"start".to_string(), HashSet::new());
+    return recurse_walk_counting_paths(&graph, &"start".to_string(), FxHashSet::default());
 }
 
 /// Walk through all the paths visting small caves only once, except for one double
@@ -160,7 +166,7 @@ pub fn puzzle_b(input: &Vec<String>) -> usize {
     return recurse_walk_counting_paths_allow_a_double(
         &graph,
         &"start".to_string(),
-        HashSet::new(),
+        FxHashSet::default(),
         false,
     );
 }
@@ -218,7 +224,7 @@ mod tests {
     fn test_recurse_walk_counting_paths() {
         let (graph, start, _) = make_cave_systems();
         assert_eq!(
-            recurse_walk_counting_paths(&graph, &start, HashSet::new()),
+            recurse_walk_counting_paths(&graph, &start, FxHashSet::default()),
             10
         );
     }
@@ -227,7 +233,7 @@ mod tests {
     fn test_recurse_walk_counting_path_a_doubles() {
         let (graph, start, _) = make_cave_systems();
         assert_eq!(
-            recurse_walk_counting_paths_allow_a_double(&graph, &start, HashSet::new(), false),
+            recurse_walk_counting_paths_allow_a_double(&graph, &start, FxHashSet::default(), false),
             36
         );
     }
