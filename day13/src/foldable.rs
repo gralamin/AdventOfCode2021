@@ -23,12 +23,12 @@ impl FoldablePaper {
         // When we fold, the distance between the y_to_fold and the y of each point remains constant
         // and X remains constant.
         for coord in self.board.coord_iter() {
-            if coord.y <= y_to_fold {
-                // skip over these for now.
+            if coord.y >= y_to_fold {
+                // skip over these
                 continue;
             } else {
-                let distance = coord.y - y_to_fold;
-                let matching_coord = BoardCoordinate::new(coord.x, y_to_fold - distance);
+                let distance = y_to_fold - coord.y;
+                let matching_coord = BoardCoordinate::new(coord.x, y_to_fold + distance);
                 if let Some(unfolded_v) = self.board.get_value(matching_coord) {
                     if let Some(folded_v) = self.board.get_value(coord) {
                         new_values.push(unfolded_v || folded_v);
@@ -55,12 +55,12 @@ impl FoldablePaper {
         // When we fold, the distance between the x_to_fold and the x of each point remains constant
         // and y remains constant.
         for coord in self.board.coord_iter() {
-            if coord.x <= x_to_fold {
-                // skip over these for now.
+            if coord.x >= x_to_fold {
+                // skip over these, already handled.
                 continue;
             } else {
-                let distance = coord.x - x_to_fold;
-                let matching_coord = BoardCoordinate::new(x_to_fold - distance, coord.y);
+                let distance = x_to_fold - coord.x;
+                let matching_coord = BoardCoordinate::new(x_to_fold + distance, coord.y);
                 if let Some(unfolded_v) = self.board.get_value(matching_coord) {
                     if let Some(folded_v) = self.board.get_value(coord) {
                         new_values.push(unfolded_v || folded_v);
@@ -105,18 +105,12 @@ impl FoldablePaper {
             }
             last_y = coord.y;
             if self.board.get_value(coord).unwrap() {
-                string_parts.push("#");
+                string_parts.push("█");
             } else {
                 string_parts.push(" ");
             }
         }
-        return string_parts
-            .iter()
-            .map(|x| *x)
-            .collect::<String>()
-            .chars() // Flip it, note chars.rev can go wrong in unicode cases.
-            .rev()
-            .collect::<String>();
+        return string_parts.iter().map(|x| *x).collect::<String>();
     }
 }
 
