@@ -96,7 +96,7 @@ pub fn puzzle_a(coords: &FxHashSet<BoardCoordinate>, folds: &Vec<Fold>) -> usize
 /// dot_coords.insert(BoardCoordinate::new(8, 10));
 /// dot_coords.insert(BoardCoordinate::new(9, 0));
 /// let folds = vec![day13::Fold::Horizontal(7), day13::Fold::Vertical(5)];
-/// assert_eq!(day13::puzzle_b(&dot_coords, &folds), "#####\n#   #\n#   #\n#   #\n#####\n     \n     ");
+/// assert_eq!(day13::puzzle_b(&dot_coords, &folds), "█████\n█   █\n█   █\n█   █\n█████\n     \n     ");
 /// ```
 pub fn puzzle_b(coords: &FxHashSet<BoardCoordinate>, folds: &Vec<Fold>) -> String {
     let mut width: usize = 0;
