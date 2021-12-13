@@ -6,6 +6,8 @@ use boardlib::{Board, BoardTraversable};
 pub use rustc_hash::FxHashSet;
 
 pub use filelib::{load, split_lines_by_blanks};
+mod fold;
+pub use crate::fold::Fold;
 
 #[derive(Debug)]
 struct FoldablePaper {
@@ -142,12 +144,6 @@ impl FoldablePaper {
             .rev()
             .collect::<String>();
     }
-}
-
-#[derive(Debug, PartialEq)]
-pub enum Fold {
-    Vertical(usize),
-    Horizontal(usize),
 }
 
 /// Perform the first fold and count the dots
