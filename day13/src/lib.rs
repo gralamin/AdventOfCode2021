@@ -120,7 +120,7 @@ impl FoldablePaper {
         return self.board.get_height();
     }
 
-    pub fn fancy_print(&self) -> String {
+    fn fancy_print(&self) -> String {
         let mut string_parts: Vec<&str> = Vec::new();
         let mut last_y = 0;
         for coord in self.board.coord_iter() {
@@ -131,10 +131,16 @@ impl FoldablePaper {
             if self.board.get_value(coord).unwrap() {
                 string_parts.push("#");
             } else {
-                string_parts.push(".");
+                string_parts.push(" ");
             }
         }
-        return string_parts.iter().map(|x| *x).collect();
+        return string_parts
+            .iter()
+            .map(|x| *x)
+            .collect::<String>()
+            .chars() // Flip it, note chars.rev can go wrong in unicode cases.
+            .rev()
+            .collect::<String>();
     }
 }
 
@@ -308,7 +314,7 @@ pub fn parse_coords(inputs: &Vec<String>) -> FxHashSet<BoardCoordinate> {
 /// dot_coords.insert(BoardCoordinate::new(8, 10));
 /// dot_coords.insert(BoardCoordinate::new(9, 0));
 /// let folds = vec![day13::Fold::Horizontal(7), day13::Fold::Vertical(5)];
-/// assert_eq!(day13::puzzle_b(&dot_coords, &folds), "Foo");
+/// assert_eq!(day13::puzzle_b(&dot_coords, &folds), "#####\n#   #\n#   #\n#   #\n#####\n     \n     ");
 /// ```
 pub fn puzzle_b(coords: &FxHashSet<BoardCoordinate>, folds: &Vec<Fold>) -> String {
     let mut width: usize = 0;
@@ -336,9 +342,7 @@ pub fn puzzle_b(coords: &FxHashSet<BoardCoordinate>, folds: &Vec<Fold>) -> Strin
     }
 
     // I'm too lazy to build an OCR that can flip letters if they are upside down...
-    println!("{}", folded_paper.fancy_print());
-
-    return "Foo".to_string();
+    return folded_paper.fancy_print();
 }
 
 #[cfg(test)]

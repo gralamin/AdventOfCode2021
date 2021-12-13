@@ -26,5 +26,5 @@ fn main() {
     println!("Solution to 1: {}", value_a);
 
     let value_b = puzzle_b(&coords, &folds);
-    println!("Solution to 2: {}", value_b);
+    println!("Solution to 2: \n{}", value_b);
 }
