@@ -36,6 +36,7 @@ pub struct Board<T: Copy> {
 
 impl<T: Copy> Board<T> {
     pub fn new(width: usize, height: usize, values: Vec<T>) -> Board<T> {
+        assert_eq!(width * height, values.len());
         return Board {
             width: width,
             height: height,
@@ -221,6 +222,15 @@ impl<T: Copy> BoardTraversable for Board<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    #[should_panic]
+    fn test_make_bad_board() {
+        let nums = vec![1, 2];
+        let height = 9;
+        let width = 23;
+        Board::new(width, height, nums);
+    }
 
     fn produce_board() -> Board<i32> {
         let board_nums = vec![
