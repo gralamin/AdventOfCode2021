@@ -7,7 +7,7 @@ Per day, remember to:
 ```
 export day=day07
 cargo new $day
-cp helloworld/Makefile $day/
+cp day01/Makefile $day/
 touch $day/README.md
 touch $day/input
 touch $day/src/lib.rs
