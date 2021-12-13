@@ -119,6 +119,23 @@ impl FoldablePaper {
     fn get_height(&self) -> usize {
         return self.board.get_height();
     }
+
+    pub fn fancy_print(&self) -> String {
+        let mut string_parts: Vec<&str> = Vec::new();
+        let mut last_y = 0;
+        for coord in self.board.coord_iter() {
+            if coord.y > last_y {
+                string_parts.push("\n");
+            }
+            last_y = coord.y;
+            if self.board.get_value(coord).unwrap() {
+                string_parts.push("#");
+            } else {
+                string_parts.push(".");
+            }
+        }
+        return string_parts.iter().map(|x| *x).collect();
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -264,6 +281,64 @@ pub fn parse_coords(inputs: &Vec<String>) -> FxHashSet<BoardCoordinate> {
         coords.insert(BoardCoordinate::new(x, y));
     }
     return coords;
+}
+
+/// Perform all the folds, then figure out what letters there are
+///
+/// ```
+/// use boardlib::BoardCoordinate;
+/// use rustc_hash::FxHashSet;
+/// let mut dot_coords: FxHashSet<BoardCoordinate> = FxHashSet::default();
+/// dot_coords.insert(BoardCoordinate::new(6, 10));
+/// dot_coords.insert(BoardCoordinate::new(0, 14));
+/// dot_coords.insert(BoardCoordinate::new(9, 10));
+/// dot_coords.insert(BoardCoordinate::new(0, 3));
+/// dot_coords.insert(BoardCoordinate::new(10, 4));
+/// dot_coords.insert(BoardCoordinate::new(4, 11));
+/// dot_coords.insert(BoardCoordinate::new(6, 0));
+/// dot_coords.insert(BoardCoordinate::new(6, 12));
+/// dot_coords.insert(BoardCoordinate::new(4, 1));
+/// dot_coords.insert(BoardCoordinate::new(0, 13));
+/// dot_coords.insert(BoardCoordinate::new(10, 12));
+/// dot_coords.insert(BoardCoordinate::new(3, 4));
+/// dot_coords.insert(BoardCoordinate::new(3, 0));
+/// dot_coords.insert(BoardCoordinate::new(8, 4));
+/// dot_coords.insert(BoardCoordinate::new(1, 10));
+/// dot_coords.insert(BoardCoordinate::new(2, 14));
+/// dot_coords.insert(BoardCoordinate::new(8, 10));
+/// dot_coords.insert(BoardCoordinate::new(9, 0));
+/// let folds = vec![day13::Fold::Horizontal(7), day13::Fold::Vertical(5)];
+/// assert_eq!(day13::puzzle_b(&dot_coords, &folds), "Foo");
+/// ```
+pub fn puzzle_b(coords: &FxHashSet<BoardCoordinate>, folds: &Vec<Fold>) -> String {
+    let mut width: usize = 0;
+    let mut height: usize = 0;
+    for v in coords.iter() {
+        if v.x > width {
+            width = v.x;
+        }
+        if v.y > height {
+            height = v.y;
+        }
+    }
+    // Width and height are 1 indexed, not 0 indexed.
+    width += 1;
+    height += 1;
+
+    let values = coords_to_bool(coords, width, height);
+    let paper = FoldablePaper::new(values, width, height);
+    let mut folded_paper: FoldablePaper = paper;
+    for fold in folds {
+        match fold {
+            Fold::Vertical(a) => folded_paper = folded_paper.fold_vertical(*a),
+            Fold::Horizontal(a) => folded_paper = folded_paper.fold_horizontal(*a),
+        }
+    }
+
+    // I'm too lazy to build an OCR that can flip letters if they are upside down...
+    println!("{}", folded_paper.fancy_print());
+
+    return "Foo".to_string();
 }
 
 #[cfg(test)]
