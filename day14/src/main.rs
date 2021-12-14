@@ -1,6 +1,6 @@
 use day14::puzzle_a;
 use day14::{load, split_lines_by_blanks};
-// use day14::puzzle_b;
+use day14::puzzle_b;
 use day14::{create_rules, FxHashMap, PolyPair};
 use day14::{get_alphabet, FxHashSet};
 
@@ -23,6 +23,6 @@ fn main() {
     let value_a = puzzle_a(&template, &rules, &alphabet);
     println!("Solution to 1: {}", value_a);
 
-    //let value_b = puzzle_b(&template, &rules, &alphabet);
-    //println!("Solution to 2: {}", value_b);
+    let value_b = puzzle_b(&template, &rules, &alphabet);
+    println!("Solution to 2: {}", value_b);
 }
