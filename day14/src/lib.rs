@@ -169,9 +169,15 @@ pub fn puzzle_a(
     rules: &FxHashMap<PolyPair, String>,
     alphabet: &FxHashSet<String>,
 ) -> usize {
-    // First of all apply the template 10 times.
+    return common_puzzle(polymer_template, rules, alphabet, 10);
+}
+
+fn common_puzzle(polymer_template: &str,
+    rules: &FxHashMap<PolyPair, String>,
+    alphabet: &FxHashSet<String>,
+num_runs: usize) -> usize {
     let mut polymer = Polymer::new(polymer_template.to_string());
-    for _ in 0..10 {
+    for _ in 0..num_runs {
         polymer = polymer_cycle(&polymer, &rules);
     }
 
@@ -187,6 +193,40 @@ pub fn puzzle_a(
         }
     }
     return top_count - bottom_count;
+}
+
+/// Cycle the polymer 10 times, then get the top two character counts, and subtract from each other
+///
+/// ```
+/// use rustc_hash::{FxHashMap, FxHashSet};
+/// use day14::PolyPair;
+/// let mut rules: FxHashMap<PolyPair, String> = FxHashMap::default();
+/// rules.insert(PolyPair::new("CH"), "B".to_string());
+/// rules.insert(PolyPair::new("HH"), "N".to_string());
+/// rules.insert(PolyPair::new("CB"), "H".to_string());
+/// rules.insert(PolyPair::new("NH"), "C".to_string());
+/// rules.insert(PolyPair::new("HB"), "C".to_string());
+/// rules.insert(PolyPair::new("HC"), "B".to_string());
+/// rules.insert(PolyPair::new("HN"), "C".to_string());
+/// rules.insert(PolyPair::new("NN"), "C".to_string());
+/// rules.insert(PolyPair::new("BH"), "H".to_string());
+/// rules.insert(PolyPair::new("NC"), "B".to_string());
+/// rules.insert(PolyPair::new("NB"), "B".to_string());
+/// rules.insert(PolyPair::new("BN"), "B".to_string());
+/// rules.insert(PolyPair::new("BB"), "N".to_string());
+/// rules.insert(PolyPair::new("BC"), "B".to_string());
+/// rules.insert(PolyPair::new("CC"), "N".to_string());
+/// rules.insert(PolyPair::new("CN"), "C".to_string());
+/// let template = "NNCB";
+/// let alphabet = day14::get_alphabet(template, &rules);
+/// assert_eq!(day14::puzzle_b(template, &rules, &alphabet), 2188189693529);
+/// ```
+pub fn puzzle_b(
+    polymer_template: &str,
+    rules: &FxHashMap<PolyPair, String>,
+    alphabet: &FxHashSet<String>,
+) -> usize {
+    return common_puzzle(polymer_template, rules, alphabet, 40);
 }
 
 #[cfg(test)]
