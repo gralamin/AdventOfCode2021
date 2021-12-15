@@ -6,6 +6,17 @@ use std::collections::BinaryHeap;
 
 pub use filelib::load;
 
+fn debug_print(v: &Vec<u32>, width: usize) {
+    let mut to_join: Vec<String> = Vec::new();
+    for x in 0..v.len() {
+        if x % width == 0 && x != 0 {
+            to_join.push("\n".to_string());
+        }
+        to_join.push(v[x].to_string());
+    }
+    println!("{}", to_join.join(""))
+}
+
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 struct RiskNode {
     value: u32,
@@ -109,6 +120,78 @@ impl DijkstraGraphMap {
         return (top_left, bottom_right);
     }
 
+    fn add_str_board_times(&mut self, input: String, mult: usize) -> (RiskNode, RiskNode) {
+        let lines: Vec<&str> = input
+            .lines()
+            .map(|x| x.trim())
+            .filter(|x| !x.is_empty())
+            .collect();
+        let basic_width = lines.first().unwrap().len();
+        let basic_height = lines.len();
+        let width = basic_width * mult;
+        let height = basic_height * mult;
+        let mut num_values: Vec<u32> = Vec::new();
+        let values: Vec<String> = lines
+            .into_iter()
+            .map(|x| x.chars().map(|y| y.to_string()).collect::<Vec<String>>())
+            .flatten()
+            .collect();
+        let num_values_basic: Vec<u32> = values
+            .iter()
+            .map(|x| x.parse::<u32>().unwrap())
+            .collect::<Vec<u32>>();
+        for y_modifier in 0..5 {
+            for current_y in 0..basic_height {
+                //  pos.x + pos.y * self.width;
+                let start_of_line  = current_y * basic_width;
+                let end_of_line = (current_y + 1) * basic_width;
+                for x_modifier in 0..5 {
+                    let value_increased_by = y_modifier + x_modifier;
+                    for index in start_of_line..end_of_line {
+                        let v = num_values_basic[index];
+                        let mut new_value = v + value_increased_by;
+                        if new_value > 9 {
+                            // If 10, we want it to go to 1, if 11, to 2, etc.
+                            // So mod by 9
+                            new_value = new_value % 9
+                        }
+                        num_values.push(new_value);
+                    }
+                }
+            }
+        }
+        //debug_print(&num_values, width);
+        let board: Board<u32> = Board::new(width, height, num_values);
+
+        for cur_coord in board.coord_iter() {
+            let cur_value = board.get_value(cur_coord).unwrap();
+            let cur_node = RiskNode {
+                value: cur_value,
+                coordinate: cur_coord,
+            };
+            for adj_coord in board.get_adjacent_coordinates(cur_coord) {
+                let adj_value = board.get_value(adj_coord).unwrap();
+                let adj_node = RiskNode {
+                    value: adj_value,
+                    coordinate: adj_coord,
+                };
+                self.add_directed_edge(&cur_node, &adj_node);
+            }
+        }
+        // return top left and bottom right Risk Nodes for further operations
+        let top_left_coord = BoardCoordinate::new(0, 0);
+        let top_left = RiskNode {
+            value: board.get_value(top_left_coord).unwrap(),
+            coordinate: top_left_coord,
+        };
+        let bottom_right_coord = BoardCoordinate::new(width - 1, height - 1);
+        let bottom_right = RiskNode {
+            value: board.get_value(bottom_right_coord).unwrap(),
+            coordinate: bottom_right_coord,
+        };
+        return (top_left, bottom_right);
+    }
+
     fn add_directed_edge(&mut self, src: &RiskNode, dst: &RiskNode) {
         self.adjacencies
             .entry(*src)
@@ -163,11 +246,23 @@ impl DijkstraGraphMap {
 ///
 /// ```
 /// let risks = "1163751742\n1381373672\n2136511328\n3694931569\n7463417111\n1319128137\n1359912421\n3125421639\n1293138521\n2311944581".to_string();
-/// assert_eq!(day15::puzzle_a(risks), 40);
+/// assert_eq!(day15::puzzle_a(&risks), 40);
 /// ```
-pub fn puzzle_a(lines: String) -> u32 {
+pub fn puzzle_a(lines: &String) -> u32 {
     let mut graph = DijkstraGraphMap::new();
-    let (start, end) = graph.add_str_board(lines);
+    let (start, end) = graph.add_str_board(lines.clone());
+    return graph.shortest_path_cost(&start, &end);
+}
+
+/// Solve shortest path from top left to bottom right, on a 5 times larger board with slight variation.
+///
+/// ```
+/// let risks = "1163751742\n1381373672\n2136511328\n3694931569\n7463417111\n1319128137\n1359912421\n3125421639\n1293138521\n2311944581".to_string();
+/// assert_eq!(day15::puzzle_b(&risks), 315);
+/// ```
+pub fn puzzle_b(lines: &String) -> u32 {
+    let mut graph = DijkstraGraphMap::new();
+    let (start, end) = graph.add_str_board_times(lines.clone(), 5);
     return graph.shortest_path_cost(&start, &end);
 }
 
