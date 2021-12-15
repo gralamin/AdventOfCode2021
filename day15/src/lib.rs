@@ -143,7 +143,7 @@ impl DijkstraGraphMap {
         for y_modifier in 0..5 {
             for current_y in 0..basic_height {
                 //  pos.x + pos.y * self.width;
-                let start_of_line  = current_y * basic_width;
+                let start_of_line = current_y * basic_width;
                 let end_of_line = (current_y + 1) * basic_width;
                 for x_modifier in 0..5 {
                     let value_increased_by = y_modifier + x_modifier;
