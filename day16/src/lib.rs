@@ -22,7 +22,7 @@ pub fn parse_hexadecimal(input: &str) -> Vec<u8> {
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 enum PacketType {
     Literal,
-    Operator,
+    Operator(u32),
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -32,6 +32,32 @@ struct Packet {
     literal_value: BigUint,
     length_type_id: bool,
     sub_packets: Vec<Packet>,
+}
+
+impl Packet {
+    fn solve(&self) -> u64 {
+        let v: u64;
+        let mut solved_sub_packets = self.sub_packets.iter().map(|x| x.solve());
+        let mut solved_sub_packets2 = self.sub_packets.iter().map(|x| x.solve());
+        v = match self.packet_type {
+            PacketType::Literal => get_u64_from_big(self.literal_value.clone()),
+            PacketType::Operator(0) => solved_sub_packets.sum(),
+            PacketType::Operator(1) => solved_sub_packets.product(),
+            PacketType::Operator(2) => solved_sub_packets.min().unwrap(),
+            PacketType::Operator(3) => solved_sub_packets.max().unwrap(),
+            PacketType::Operator(5) => {
+                (solved_sub_packets.nth(0).unwrap() > solved_sub_packets2.nth(1).unwrap()) as u64
+            }
+            PacketType::Operator(6) => {
+                (solved_sub_packets.nth(0).unwrap() < solved_sub_packets2.nth(1).unwrap()) as u64
+            }
+            PacketType::Operator(7) => {
+                (solved_sub_packets.nth(0).unwrap() == solved_sub_packets2.nth(1).unwrap()) as u64
+            }
+            _ => 0,
+        };
+        return v;
+    }
 }
 
 fn get_bits_from_packet_stream(packet_stream: &Vec<u8>, start: usize, end: usize) -> BigUint {
@@ -62,6 +88,17 @@ fn get_bits_from_packet_stream(packet_stream: &Vec<u8>, start: usize, end: usize
 fn get_u32_from_big(v: BigUint) -> u32 {
     let digits = v.to_u32_digits();
     let r: u32;
+    if digits.len() == 0 {
+        r = 0;
+    } else {
+        r = *(digits.first().unwrap());
+    }
+    return r;
+}
+
+fn get_u64_from_big(v: BigUint) -> u64 {
+    let digits = v.to_u64_digits();
+    let r: u64;
     if digits.len() == 0 {
         r = 0;
     } else {
@@ -150,7 +187,7 @@ fn recursively_parse_packet(packet: &Vec<u8>, start_bit: usize) -> (Packet, usiz
     }
     let result = Packet {
         version: header_version,
-        packet_type: PacketType::Operator,
+        packet_type: PacketType::Operator(header_type_id),
         literal_value: BigUint::new(vec![]),
         length_type_id: length_type_id,
         sub_packets: parts,
@@ -208,6 +245,38 @@ pub fn puzzle_a(packet_stream: &Vec<u8>) -> u32 {
     return versions;
 }
 
+/// Run the packet operations
+///
+/// ```
+/// let packet_stream = day16::parse_hexadecimal("C200B40A82");
+/// assert_eq!(day16::puzzle_b(&packet_stream), 3);
+/// println!("-------");
+/// let packet_stream = day16::parse_hexadecimal("04005AC33890");
+/// assert_eq!(day16::puzzle_b(&packet_stream), 54);
+/// println!("-------");
+/// let packet_stream = day16::parse_hexadecimal("880086C3E88112");
+/// assert_eq!(day16::puzzle_b(&packet_stream), 7);
+/// println!("-------");
+/// let packet_stream = day16::parse_hexadecimal("CE00C43D881120");
+/// assert_eq!(day16::puzzle_b(&packet_stream), 9);
+/// println!("-------");
+/// let packet_stream = day16::parse_hexadecimal("D8005AC2A8F0");
+/// assert_eq!(day16::puzzle_b(&packet_stream), 1);
+/// println!("-------");
+/// let packet_stream = day16::parse_hexadecimal("F600BC2D8F");
+/// assert_eq!(day16::puzzle_b(&packet_stream), 0);
+/// println!("-------");
+/// let packet_stream = day16::parse_hexadecimal("9C005AC2F8F0");
+/// assert_eq!(day16::puzzle_b(&packet_stream), 0);
+/// println!("-------");
+/// let packet_stream = day16::parse_hexadecimal("9C0141080250320F1802104A08");
+/// assert_eq!(day16::puzzle_b(&packet_stream), 1);
+/// ```
+pub fn puzzle_b(packet_stream: &Vec<u8>) -> u64 {
+    let packet = parse_packet(packet_stream);
+    return packet.solve();
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -257,7 +326,7 @@ mod tests {
         assert_eq!(parsed.literal_value, BigUint::new(vec![]));
         assert_eq!(parsed.version, 1);
         assert_eq!(parsed.length_type_id, false);
-        assert_eq!(parsed.packet_type, PacketType::Operator);
+        assert_eq!(parsed.packet_type, PacketType::Operator(6));
         let sub_one = parsed.sub_packets.first().unwrap();
         assert_eq!(sub_one.literal_value, BigUint::new(vec![10]));
         assert_eq!(sub_one.version, 6);
@@ -275,7 +344,7 @@ mod tests {
         assert_eq!(parsed.literal_value, BigUint::new(vec![]));
         assert_eq!(parsed.version, 7);
         assert_eq!(parsed.length_type_id, true);
-        assert_eq!(parsed.packet_type, PacketType::Operator);
+        assert_eq!(parsed.packet_type, PacketType::Operator(3));
         let sub_one = parsed.sub_packets.first().unwrap();
         assert_eq!(sub_one.literal_value, BigUint::new(vec![1]));
         assert_eq!(sub_one.version, 2);
