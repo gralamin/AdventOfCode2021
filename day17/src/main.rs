@@ -1,7 +1,7 @@
 use day17::load;
 use day17::load_target_area;
 use day17::puzzle_a;
-//use day17::puzzle_b;
+use day17::puzzle_b;
 
 fn main() {
     let filename = "input";
@@ -11,6 +11,6 @@ fn main() {
     let value_a = puzzle_a(x1, y1, x2, y2);
     println!("Solution to 1: {}", value_a);
 
-    //let value_b = puzzle_b(&packet_stream);
-    //println!("Solution to 2: {}", value_b);
+    let value_b = puzzle_b(x1, y1, x2, y2);
+    println!("Solution to 2: {}", value_b);
 }
