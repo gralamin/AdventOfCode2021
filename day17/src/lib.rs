@@ -103,3 +103,21 @@ pub fn puzzle_a(target_x1: i32, target_y1: i32, target_x2: i32, target_y2: i32) 
     }
     return max_y;
 }
+
+/// Find number of possible velocities
+///
+/// ```
+/// assert_eq!(day17::puzzle_b(20, -10, 30, -5), 112)
+/// ```
+pub fn puzzle_b(target_x1: i32, target_y1: i32, target_x2: i32, target_y2: i32) -> i32 {
+    let mut num_hit = 0;
+    for y in target_y1..=target_y1.abs() {
+        for x in 0..=target_x2 {
+            let result = simulate(x, y, target_x1, target_y1, target_x2, target_y2);
+            if result != -1 {
+                num_hit += 1;
+            }
+        }
+    }
+    return num_hit;
+}
