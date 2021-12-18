@@ -140,6 +140,22 @@ pub fn puzzle_a(v: &[Box<SnailNumber>]) -> u64 {
     calc_magnitude(&sum)
 }
 
+pub fn puzzle_b(v: &[Box<SnailNumber>]) -> u64 {
+    let mut max = 0;
+    for (i, snail) in v.iter().enumerate() {
+        for second_snail in v[i + 1..].iter() {
+            let mut x_plus_y = Box::new(SnailNumber::Pair(snail.clone(), second_snail.clone()));
+            let mut y_plus_x = Box::new(SnailNumber::Pair(second_snail.clone(), snail.clone()));
+            reduce(&mut x_plus_y);
+            reduce(&mut y_plus_x);
+            max = u64::max(
+                max,
+                u64::max(calc_magnitude(&x_plus_y), calc_magnitude(&y_plus_x)),
+            );
+        }
+    }
+    return max;
+}
 
 fn print_snail(snail: &SnailNumber) {
     match snail {
