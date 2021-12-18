@@ -55,7 +55,7 @@ impl SnailNumber {
                     let left = l.explode(depth + 1);
                     if left.0 {
                         if let Some(val) = left.2 {
-                            add_to_left(r, val);
+                            r.add_to_left(val);
                             (true, left.1, None)
                         } else {
                             left
@@ -64,7 +64,7 @@ impl SnailNumber {
                         let right = r.explode(depth + 1);
                         if right.0 {
                             if let Some(val) = right.1 {
-                                add_to_right(l, val);
+                                l.add_to_right(val);
                                 (true, None, right.2)
                             } else {
                                 right
@@ -87,6 +87,20 @@ impl SnailNumber {
                     break;
                 }
             }
+        }
+    }
+
+    fn add_to_right(&mut self, val: u8) {
+        match self {
+            SnailNumber::Num(n) => *n += val,
+            SnailNumber::Pair(_, r) => r.add_to_right(val),
+        }
+    }
+
+    fn add_to_left(&mut self, val: u8) {
+        match self {
+            SnailNumber::Num(n) => *n += val,
+            SnailNumber::Pair(l, _) => l.add_to_left(val),
         }
     }
 }
@@ -136,20 +150,6 @@ pub fn parse(input: &str) -> Vec<Box<SnailNumber>> {
         .filter(|x| !x.is_empty())
         .map(|x| read_snail_num(x).0)
         .collect()
-}
-
-fn add_to_right(snail: &mut Box<SnailNumber>, val: u8) {
-    match snail.as_mut() {
-        SnailNumber::Num(n) => *n += val,
-        SnailNumber::Pair(_, r) => add_to_right(r, val),
-    }
-}
-
-fn add_to_left(snail: &mut Box<SnailNumber>, val: u8) {
-    match snail.as_mut() {
-        SnailNumber::Num(n) => *n += val,
-        SnailNumber::Pair(l, _) => add_to_left(l, val),
-    }
 }
 
 /// Parse the homework input
@@ -281,8 +281,35 @@ mod tests {
 
         let parsed = parse("[[[[0,7],4],[[7,8],[6,0]]],[8,1]]");
         let expected = parsed.get(0).unwrap();
-        
+
         num.reduce();
         assert_eq!(num, expected);
+    }
+
+    #[test]
+    fn test_add_left() {
+        let mut parsed = parse("[[[[4,3],4],4],[7,[[8,4],9]]]");
+        let base = parsed.get_mut(0).unwrap();
+
+        let adder = 4;
+
+        let mut parsed = parse("[[[[8,3],4],4],[7,[[8,4],9]]]");
+        let expected = parsed.get_mut(0).unwrap();
+
+        base.add_to_left(adder);
+        assert_eq!(base, expected);
+    }
+
+    #[test]
+    fn test_add_right() {
+        let mut parsed = parse("[[[[4,3],4],4],[7,[[8,4],1]]]");
+        let base = parsed.get_mut(0).unwrap();
+
+        let adder = 4;
+        let mut parsed = parse("[[[[4,3],4],4],[7,[[8,4],5]]]");
+        let expected = parsed.get_mut(0).unwrap();
+
+        base.add_to_right(adder);
+        assert_eq!(base, expected);
     }
 }
