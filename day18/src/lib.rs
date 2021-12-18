@@ -8,14 +8,19 @@ pub enum SnailNumber {
 
 impl SnailNumber {
     fn magnitude(&self) -> u64 {
-        match self {
+        return match self {
+            // On a number, return its value
             SnailNumber::Num(n) => *n as u64,
+            // On a pair, return 3 * l + 2 * r
             SnailNumber::Pair(l, r) => 3 * l.magnitude() + 2 * r.magnitude(),
-        }
+        };
     }
 
+    // Return false if we don't split.
     fn split(&mut self) -> bool {
         match self {
+            // If we are a number, split on 10 or higher, into a pair (by dividing by 2)
+            // pair left should be rounded down, right should be rounded up
             SnailNumber::Num(n) => {
                 if *n >= 10 {
                     *self = SnailNumber::Pair(
@@ -27,6 +32,7 @@ impl SnailNumber {
                     return false;
                 }
             }
+            // If we are a pair, split left. If we fail to split on left, split on right.
             SnailNumber::Pair(l, r) => {
                 let mut ok = l.split();
                 if !ok {
@@ -39,46 +45,58 @@ impl SnailNumber {
     }
 
     fn explode(&mut self, depth: u8) -> (bool, Option<u8>, Option<u8>) {
-        match self {
+        return match self {
             SnailNumber::Num(_) => (false, None, None),
             SnailNumber::Pair(l, r) => {
                 if depth == 4 {
+                    // We need to get values out of boxes...
                     match (&**l, &**r) {
                         (SnailNumber::Num(left), SnailNumber::Num(right)) => {
+                            // Set self to 0, and return up the values to be exploded.
                             let ret = (true, Some(*left), Some(*right));
                             *self = SnailNumber::Num(0);
-                            ret
+                            return ret;
                         }
                         (_, _) => panic!("Tree too deep already!"),
                     }
                 } else {
+                    // Try exploding left
                     let left = l.explode(depth + 1);
                     if left.0 {
+                        // If it does explode, grab the right value, and add it to our left value.
                         if let Some(val) = left.2 {
                             r.add_to_left(val);
-                            (true, left.1, None)
+                            // Indicate up we have a value exploded, and still need to consume the left value.
+                            return (true, left.1, None);
                         } else {
-                            left
+                            // Right already consumed, leave left alone.
+                            return left;
                         }
                     } else {
+                        // Try exploding right
                         let right = r.explode(depth + 1);
                         if right.0 {
+                            // if it does explode, grab the left value, and add it to our right value.
                             if let Some(val) = right.1 {
                                 l.add_to_right(val);
-                                (true, None, right.2)
+                                // indicate we have a value exploded, and still need to consume the right value.
+                                return (true, None, right.2);
                             } else {
-                                right
+                                // left already consumed, leave alone.
+                                return right;
                             }
                         } else {
-                            (false, None, None)
+                            // No explode.
+                            return (false, None, None);
                         }
                     }
                 }
             }
-        }
+        };
     }
 
     fn reduce(&mut self) {
+        // Try exploding, if I can't, split. Repeat until neither can happen.
         loop {
             let x = self.explode(0);
             if !x.0 {
@@ -91,6 +109,7 @@ impl SnailNumber {
     }
 
     fn add_to_right(&mut self, val: u8) {
+        // In the right most number, add val
         match self {
             SnailNumber::Num(n) => *n += val,
             SnailNumber::Pair(_, r) => r.add_to_right(val),
@@ -98,6 +117,7 @@ impl SnailNumber {
     }
 
     fn add_to_left(&mut self, val: u8) {
+        // In the left most number, add val
         match self {
             SnailNumber::Num(n) => *n += val,
             SnailNumber::Pair(l, _) => l.add_to_left(val),
@@ -105,6 +125,7 @@ impl SnailNumber {
     }
 }
 
+// Parse read snail number character by character, recursively.
 fn read_snail_num(text: &str) -> (Box<SnailNumber>, usize) {
     if text[0..1] == *"[" {
         let (left, left_id) = read_snail_num(&text[1..]);
