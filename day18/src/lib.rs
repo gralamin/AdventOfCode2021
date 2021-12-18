@@ -77,6 +77,18 @@ impl SnailNumber {
             }
         }
     }
+
+    fn reduce(&mut self) {
+        loop {
+            let x = self.explode(0);
+            if !x.0 {
+                let x = self.split();
+                if !x {
+                    break;
+                }
+            }
+        }
+    }
 }
 
 fn read_snail_num(text: &str) -> (Box<SnailNumber>, usize) {
@@ -140,18 +152,6 @@ fn add_to_left(snail: &mut Box<SnailNumber>, val: u8) {
     }
 }
 
-fn reduce(snail: &mut Box<SnailNumber>) {
-    loop {
-        let x = snail.explode(0);
-        if !x.0 {
-            let x = snail.split();
-            if !x {
-                break;
-            }
-        }
-    }
-}
-
 /// Parse the homework input
 ///
 /// ```
@@ -163,7 +163,7 @@ pub fn puzzle_a(v: &[Box<SnailNumber>]) -> u64 {
     let mut sum = v[0].clone();
     for snail in v[1..].iter() {
         sum = Box::new(SnailNumber::Pair(sum, snail.clone()));
-        reduce(&mut sum);
+        sum.reduce();
     }
     sum.magnitude()
 }
@@ -181,8 +181,8 @@ pub fn puzzle_b(v: &[Box<SnailNumber>]) -> u64 {
         for second_snail in v[i + 1..].iter() {
             let mut x_plus_y = Box::new(SnailNumber::Pair(snail.clone(), second_snail.clone()));
             let mut y_plus_x = Box::new(SnailNumber::Pair(second_snail.clone(), snail.clone()));
-            reduce(&mut x_plus_y);
-            reduce(&mut y_plus_x);
+            x_plus_y.reduce();
+            y_plus_x.reduce();
             max = u64::max(max, u64::max(x_plus_y.magnitude(), y_plus_x.magnitude()));
         }
     }
@@ -254,7 +254,7 @@ mod tests {
             Box::new(SnailNumber::Num(4)),
         ));
 
-        let mut expected = Box::new(SnailNumber::Pair(
+        let expected = Box::new(SnailNumber::Pair(
             Box::new(SnailNumber::Pair(
                 Box::new(SnailNumber::Pair(
                     Box::new(SnailNumber::Pair(
@@ -271,6 +271,18 @@ mod tests {
         let (result, _, _) = num.explode(0);
 
         assert_eq!(result, true);
+        assert_eq!(num, expected);
+    }
+
+    #[test]
+    fn test_reduce() {
+        let mut parsed = parse("[[[[[4,3],4],4],[7,[[8,4],9]]],[1,1]]");
+        let num = parsed.get_mut(0).unwrap();
+
+        let parsed = parse("[[[[0,7],4],[[7,8],[6,0]]],[8,1]]");
+        let expected = parsed.get(0).unwrap();
+        
+        num.reduce();
         assert_eq!(num, expected);
     }
 }
