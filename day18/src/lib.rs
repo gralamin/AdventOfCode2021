@@ -37,6 +37,46 @@ impl SnailNumber {
             }
         }
     }
+
+    fn explode(&mut self, depth: u8) -> (bool, Option<u8>, Option<u8>) {
+        match self {
+            SnailNumber::Num(_) => (false, None, None),
+            SnailNumber::Pair(l, r) => {
+                if depth == 4 {
+                    match (&**l, &**r) {
+                        (SnailNumber::Num(left), SnailNumber::Num(right)) => {
+                            let ret = (true, Some(*left), Some(*right));
+                            *self = SnailNumber::Num(0);
+                            ret
+                        }
+                        (_, _) => panic!("Tree too deep already!"),
+                    }
+                } else {
+                    let left = l.explode(depth + 1);
+                    if left.0 {
+                        if let Some(val) = left.2 {
+                            add_to_left(r, val);
+                            (true, left.1, None)
+                        } else {
+                            left
+                        }
+                    } else {
+                        let right = r.explode(depth + 1);
+                        if right.0 {
+                            if let Some(val) = right.1 {
+                                add_to_right(l, val);
+                                (true, None, right.2)
+                            } else {
+                                right
+                            }
+                        } else {
+                            (false, None, None)
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 fn read_snail_num(text: &str) -> (Box<SnailNumber>, usize) {
@@ -100,49 +140,9 @@ fn add_to_left(snail: &mut Box<SnailNumber>, val: u8) {
     }
 }
 
-fn explode(snail: &mut Box<SnailNumber>, depth: u8) -> (bool, Option<u8>, Option<u8>) {
-    match snail.as_mut() {
-        SnailNumber::Num(_) => (false, None, None),
-        SnailNumber::Pair(l, r) => {
-            if depth == 4 {
-                match (&**l, &**r) {
-                    (SnailNumber::Num(left), SnailNumber::Num(right)) => {
-                        let ret = (true, Some(*left), Some(*right));
-                        **snail = SnailNumber::Num(0);
-                        ret
-                    }
-                    (_, _) => panic!("Tree too deep already!"),
-                }
-            } else {
-                let left = explode(l, depth + 1);
-                if left.0 {
-                    if let Some(val) = left.2 {
-                        add_to_left(r, val);
-                        (true, left.1, None)
-                    } else {
-                        left
-                    }
-                } else {
-                    let right = explode(r, depth + 1);
-                    if right.0 {
-                        if let Some(val) = right.1 {
-                            add_to_right(l, val);
-                            (true, None, right.2)
-                        } else {
-                            right
-                        }
-                    } else {
-                        (false, None, None)
-                    }
-                }
-            }
-        }
-    }
-}
-
 fn reduce(snail: &mut Box<SnailNumber>) {
     loop {
-        let x = explode(snail, 0);
+        let x = snail.explode(0);
         if !x.0 {
             let x = snail.split();
             if !x {
@@ -233,5 +233,44 @@ mod tests {
 
         assert_eq!(num.split(), true);
         assert_eq!(num, &mut expected);
+    }
+
+    #[test]
+    fn test_explode() {
+        let mut num = Box::new(SnailNumber::Pair(
+            Box::new(SnailNumber::Pair(
+                Box::new(SnailNumber::Pair(
+                    Box::new(SnailNumber::Pair(
+                        Box::new(SnailNumber::Pair(
+                            Box::new(SnailNumber::Num(9)),
+                            Box::new(SnailNumber::Num(8)),
+                        )),
+                        Box::new(SnailNumber::Num(1)),
+                    )),
+                    Box::new(SnailNumber::Num(2)),
+                )),
+                Box::new(SnailNumber::Num(3)),
+            )),
+            Box::new(SnailNumber::Num(4)),
+        ));
+
+        let mut expected = Box::new(SnailNumber::Pair(
+            Box::new(SnailNumber::Pair(
+                Box::new(SnailNumber::Pair(
+                    Box::new(SnailNumber::Pair(
+                        Box::new(SnailNumber::Num(0)),
+                        Box::new(SnailNumber::Num(9)),
+                    )),
+                    Box::new(SnailNumber::Num(2)),
+                )),
+                Box::new(SnailNumber::Num(3)),
+            )),
+            Box::new(SnailNumber::Num(4)),
+        ));
+
+        let (result, _, _) = num.explode(0);
+
+        assert_eq!(result, true);
+        assert_eq!(num, expected);
     }
 }
