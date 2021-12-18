@@ -6,6 +6,15 @@ pub enum SnailNumber {
     Pair(Box<SnailNumber>, Box<SnailNumber>),
 }
 
+impl SnailNumber {
+    fn magnitude(&self) -> u64 {
+        match self {
+            SnailNumber::Num(n) => *n as u64,
+            SnailNumber::Pair(l, r) => 3 * l.magnitude() + 2 * r.magnitude(),
+        }
+    }
+}
+
 fn read_snail_num(text: &str) -> (Box<SnailNumber>, usize) {
     if text[0..1] == *"[" {
         let (left, left_id) = read_snail_num(&text[1..]);
@@ -131,13 +140,6 @@ fn explode(snail: &mut Box<SnailNumber>, depth: u8) -> (bool, Option<u8>, Option
     }
 }
 
-fn calc_magnitude(snail: &SnailNumber) -> u64 {
-    match snail {
-        SnailNumber::Num(n) => *n as u64,
-        SnailNumber::Pair(l, r) => 3 * calc_magnitude(l) + 2 * calc_magnitude(r),
-    }
-}
-
 fn reduce(snail: &mut Box<SnailNumber>) {
     loop {
         let x = explode(snail, 0);
@@ -163,7 +165,7 @@ pub fn puzzle_a(v: &[Box<SnailNumber>]) -> u64 {
         sum = Box::new(SnailNumber::Pair(sum, snail.clone()));
         reduce(&mut sum);
     }
-    calc_magnitude(&sum)
+    sum.magnitude()
 }
 
 /// Try adding any two numbers together in any order, and find the max magnitude
@@ -181,26 +183,36 @@ pub fn puzzle_b(v: &[Box<SnailNumber>]) -> u64 {
             let mut y_plus_x = Box::new(SnailNumber::Pair(second_snail.clone(), snail.clone()));
             reduce(&mut x_plus_y);
             reduce(&mut y_plus_x);
-            max = u64::max(
-                max,
-                u64::max(calc_magnitude(&x_plus_y), calc_magnitude(&y_plus_x)),
-            );
+            max = u64::max(max, u64::max(x_plus_y.magnitude(), y_plus_x.magnitude()));
         }
     }
     return max;
 }
 
-fn print_snail(snail: &SnailNumber) {
-    match snail {
-        SnailNumber::Num(n) => {
-            print!("{}", *n)
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn print_snail(snail: &SnailNumber) {
+        match snail {
+            SnailNumber::Num(n) => {
+                print!("{}", *n)
+            }
+            SnailNumber::Pair(l, r) => {
+                print!("[");
+                print_snail(l);
+                print!(",");
+                print_snail(r);
+                print!("]");
+            }
         }
-        SnailNumber::Pair(l, r) => {
-            print!("[");
-            print_snail(l);
-            print!(",");
-            print_snail(r);
-            print!("]");
-        }
+    }
+
+    #[test]
+    fn test_magnitude() {
+        let parsed = parse("[[[[6,6],[7,6]],[[7,7],[7,0]]],[[[7,7],[7,7]],[[7,8],[9,9]]]]");
+        let num = parsed.first().unwrap();
+        print_snail(num);
+        assert_eq!(num.magnitude(), 4140);
     }
 }
