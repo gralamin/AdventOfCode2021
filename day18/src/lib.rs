@@ -1,6 +1,6 @@
 pub use filelib::load;
 
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum SnailNumber {
     Num(u8),
     Pair(Box<SnailNumber>, Box<SnailNumber>),
@@ -25,6 +25,25 @@ fn read_snail_num(text: &str) -> (Box<SnailNumber>, usize) {
     }
 }
 
+/// Parse the homework input
+///
+/// ```
+/// let v = "[1,2]\n[[1,2],3]";
+/// let expected = vec![
+///     Box::new(day18::SnailNumber::Pair(
+///         Box::new(day18::SnailNumber::Num(1)),
+///         Box::new(day18::SnailNumber::Num(2))
+///     )),
+///     Box::new(day18::SnailNumber::Pair(
+///         Box::new(day18::SnailNumber::Pair(
+///             Box::new(day18::SnailNumber::Num(1)),
+///             Box::new(day18::SnailNumber::Num(2))
+///         )),
+///         Box::new(day18::SnailNumber::Num(3))
+///     ))
+/// ];
+/// assert_eq!(day18::parse(v), expected);
+/// ```
 pub fn parse(input: &str) -> Vec<Box<SnailNumber>> {
     input
         .lines()
@@ -131,6 +150,13 @@ fn reduce(snail: &mut Box<SnailNumber>) {
     }
 }
 
+/// Parse the homework input
+///
+/// ```
+/// let v = "[[[0,[5,8]],[[1,7],[9,6]]],[[4,[1,2]],[[1,4],2]]]\n[[[5,[2,8]],4],[5,[[9,9],0]]]\n[6,[[[6,2],[5,6]],[[7,6],[4,7]]]]\n[[[6,[0,7]],[0,9]],[4,[9,[9,0]]]]\n[[[7,[6,4]],[3,[1,3]]],[[[5,5],1],9]]\n[[6,[[7,3],[3,2]]],[[[3,8],[5,7]],4]]\n[[[[5,4],[7,7]],8],[[8,3],8]]\n[[9,3],[[9,9],[6,[4,9]]]]\n[[2,[[7,7],7]],[[5,8],[[9,3],[0,2]]]]\n[[[[5,2],5],[8,[3,7]]],[[5,[7,5]],[4,4]]]";
+/// let parsed = day18::parse(v);
+/// assert_eq!(day18::puzzle_a(&parsed), 4140);
+/// ```
 pub fn puzzle_a(v: &[Box<SnailNumber>]) -> u64 {
     let mut sum = v[0].clone();
     for snail in v[1..].iter() {
@@ -140,6 +166,13 @@ pub fn puzzle_a(v: &[Box<SnailNumber>]) -> u64 {
     calc_magnitude(&sum)
 }
 
+/// Try adding any two numbers together in any order, and find the max magnitude
+///
+/// ```
+/// let v = "[[[0,[5,8]],[[1,7],[9,6]]],[[4,[1,2]],[[1,4],2]]]\n[[[5,[2,8]],4],[5,[[9,9],0]]]\n[6,[[[6,2],[5,6]],[[7,6],[4,7]]]]\n[[[6,[0,7]],[0,9]],[4,[9,[9,0]]]]\n[[[7,[6,4]],[3,[1,3]]],[[[5,5],1],9]]\n[[6,[[7,3],[3,2]]],[[[3,8],[5,7]],4]]\n[[[[5,4],[7,7]],8],[[8,3],8]]\n[[9,3],[[9,9],[6,[4,9]]]]\n[[2,[[7,7],7]],[[5,8],[[9,3],[0,2]]]]\n[[[[5,2],5],[8,[3,7]]],[[5,[7,5]],[4,4]]]";
+/// let parsed = day18::parse(v);
+/// assert_eq!(day18::puzzle_b(&parsed), 3993);
+/// ```
 pub fn puzzle_b(v: &[Box<SnailNumber>]) -> u64 {
     let mut max = 0;
     for (i, snail) in v.iter().enumerate() {
