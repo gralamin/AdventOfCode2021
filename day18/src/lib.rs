@@ -13,6 +13,30 @@ impl SnailNumber {
             SnailNumber::Pair(l, r) => 3 * l.magnitude() + 2 * r.magnitude(),
         }
     }
+
+    fn split(&mut self) -> bool {
+        match self {
+            SnailNumber::Num(n) => {
+                if *n >= 10 {
+                    *self = SnailNumber::Pair(
+                        Box::new(SnailNumber::Num(*n / 2)),
+                        Box::new(SnailNumber::Num((*n + 1) / 2)),
+                    );
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+            SnailNumber::Pair(l, r) => {
+                let mut ok = l.split();
+                if !ok {
+                    ok = r.split();
+                }
+
+                return ok;
+            }
+        }
+    }
 }
 
 fn read_snail_num(text: &str) -> (Box<SnailNumber>, usize) {
@@ -60,30 +84,6 @@ pub fn parse(input: &str) -> Vec<Box<SnailNumber>> {
         .filter(|x| !x.is_empty())
         .map(|x| read_snail_num(x).0)
         .collect()
-}
-
-fn split(snail: &mut Box<SnailNumber>) -> bool {
-    match snail.as_mut() {
-        SnailNumber::Num(n) => {
-            if *n >= 10 {
-                **snail = SnailNumber::Pair(
-                    Box::new(SnailNumber::Num(*n / 2)),
-                    Box::new(SnailNumber::Num((*n + 1) / 2)),
-                );
-                true
-            } else {
-                false
-            }
-        }
-        SnailNumber::Pair(l, r) => {
-            let mut ok = split(l);
-            if !ok {
-                ok = split(r);
-            }
-
-            ok
-        }
-    }
 }
 
 fn add_to_right(snail: &mut Box<SnailNumber>, val: u8) {
@@ -144,7 +144,7 @@ fn reduce(snail: &mut Box<SnailNumber>) {
     loop {
         let x = explode(snail, 0);
         if !x.0 {
-            let x = split(snail);
+            let x = snail.split();
             if !x {
                 break;
             }
@@ -214,5 +214,24 @@ mod tests {
         let num = parsed.first().unwrap();
         print_snail(num);
         assert_eq!(num.magnitude(), 4140);
+    }
+
+    #[test]
+    fn test_split() {
+        let mut num = vec![Box::new(SnailNumber::Pair(
+            Box::new(SnailNumber::Num(11)),
+            Box::new(SnailNumber::Num(3)),
+        ))];
+        let num: &mut Box<SnailNumber> = num.get_mut(0).unwrap();
+        let mut expected = Box::new(SnailNumber::Pair(
+            Box::new(SnailNumber::Pair(
+                Box::new(SnailNumber::Num(5)),
+                Box::new(SnailNumber::Num(6)),
+            )),
+            Box::new(SnailNumber::Num(3)),
+        ));
+
+        assert_eq!(num.split(), true);
+        assert_eq!(num, &mut expected);
     }
 }
