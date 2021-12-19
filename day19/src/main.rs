@@ -1,8 +1,8 @@
 use day19::parse_scanner;
 use day19::puzzle_a;
+use day19::puzzle_b;
 use day19::{load, split_lines_by_blanks};
 use day19::{FxHashMap, IVec3};
-use day19::puzzle_b;
 
 fn main() {
     let filename = "input";
