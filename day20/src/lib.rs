@@ -69,7 +69,7 @@ fn enhance_pixel(
     mut top_left_y: i32,
     bottom_right_x: i32,
     mut bottom_right_y: i32,
-    outside_is: Pixel
+    outside_is: Pixel,
 ) -> Pixel {
     let mut img_pixels: Vec<Pixel> = Vec::new();
     while top_left_y < 0 {
@@ -133,7 +133,7 @@ fn enhance_image(iec: &Vec<Pixel>, img: &Vec<Vec<Pixel>>, outside_is: Pixel) -> 
                 top_left_y,
                 top_left_x + 2,
                 top_left_y + 2,
-                outside_is
+                outside_is,
             ));
         }
         result.push(row);
@@ -163,6 +163,44 @@ pub fn puzzle_a(iec: &Vec<Pixel>, img: &Vec<Vec<Pixel>>) -> u32 {
     let enhanced_twice = enhance_image(iec, &enhanced_once, outside_is);
     let mut num_light: u32 = 0;
     for row in enhanced_twice {
+        let lights: Vec<Pixel> = row
+            .iter()
+            .filter(|x| **x == LIGHT_PIXEL)
+            .map(|x| *x)
+            .collect();
+        num_light += lights.len() as u32;
+    }
+    return num_light;
+}
+
+/// Enhance the image fifty times and count number of lit pixels
+///
+/// ```
+/// let img_s = "#..#.\n#....\n##..#\n..#..\n..###";
+/// let vec_string: Vec<String> = img_s.lines().map(|x| x.to_string()).collect();
+/// let img = day20::parse_image(&vec_string);
+/// let iec_s = "..#.#..#####.#.#.#.###.##.....###.##.#..###.####..#####..#....#..#..##..###..######.###...####..#..#####..##..#.#####...##.#.#..#.##..#.#......#.###.######.###.####...#.##.##..#..#..#####.....#.#....###..#.##......#.....#..#..#..##..#...##.######.####.####.#.#...#.......#..#.#.#...####.##.#......#..#...##.#.##..#...##.#.##..###.#......#.#.......#.#.#.####.###.##...#.....####.#..#..#.##.#....##..#.####....##...##..#...#......#.#.......#.......##..####..#...#.#.#...##..#.#..###..#####........#..####......#..#";
+/// let iec = day20::parse_image_enhancement_algorithm(iec_s);
+/// assert_eq!(day20::puzzle_b(&iec, &img), 3351);
+/// ```
+pub fn puzzle_b(iec: &Vec<Pixel>, img: &Vec<Vec<Pixel>>) -> u32 {
+    // So an infinite area blinks on and off due to our input.
+    // As a hack, I've just figured out what this should be
+    let mut outside_is = DARK_PIXEL;
+    let zeroth_index = iec[0];
+    let max_index = iec[511];
+    let mut enhanced_img: Vec<Vec<Pixel>> = img.clone();
+    for i in 0..50 {
+        enhanced_img = enhance_image(iec, &enhanced_img, outside_is);
+        if zeroth_index == LIGHT_PIXEL && i % 2 == 0 {
+            outside_is = LIGHT_PIXEL;
+        } else if max_index == DARK_PIXEL && i % 2 == 1 {
+            outside_is = DARK_PIXEL;
+        }
+    }
+
+    let mut num_light: u32 = 0;
+    for row in enhanced_img.iter() {
         let lights: Vec<Pixel> = row
             .iter()
             .filter(|x| **x == LIGHT_PIXEL)
