@@ -267,6 +267,37 @@ pub fn puzzle_a(ins: &Vec<Instruction>) -> u128 {
     return num_on;
 }
 
+/// Run the boot up sequeunce, and count cubes within a range.
+///
+/// ```
+/// let s = "on x=10..12,y=10..12,z=10..12\non x=11..13,y=11..13,z=11..13\noff x=9..11,y=9..11,z=9..11\non x=10..10,y=10..10,z=10..10";
+/// let ins = day22::parse_instructions(s);
+/// assert_eq!(day22::puzzle_b(&ins), 39);
+/// ```
+pub fn puzzle_b(ins: &Vec<Instruction>) -> u128 {
+    let mut cube_map: FxHashMap<IVec3, bool> = FxHashMap::default();
+
+    for instruction in ins {
+        match instruction {
+            Instruction::On(upper_bound, lower_bound) => {
+                set_map(&mut cube_map, upper_bound, lower_bound, &CUBE_ON)
+            }
+            Instruction::Off(upper_bound, lower_bound) => {
+                set_map(&mut cube_map, upper_bound, lower_bound, &CUBE_OFF)
+            }
+        }
+    }
+
+    let mut num_on: u128 = 0;
+    for (location, state) in &cube_map {
+        if *state == CUBE_ON {
+            num_on += 1;
+        }
+    }
+
+    return num_on;
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
