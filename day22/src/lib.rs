@@ -1,110 +1,10 @@
 pub use filelib::load;
 pub use rustc_hash::FxHashMap;
 use std::cmp::{max, min};
-use std::convert::Infallible;
-use std::fmt::{Debug, Formatter};
-use std::hash::{Hash, Hasher};
-use std::ops::{Add, Sub};
-use std::str::FromStr;
+pub use ivec3::{IVec3, vec3};
 
 const CUBE_ON: bool = true;
 const CUBE_OFF: bool = false;
-
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Default)]
-pub struct IVec3 {
-    x: i32,
-    y: i32,
-    z: i32,
-}
-
-pub fn vec3(x: i32, y: i32, z: i32) -> IVec3 {
-    return IVec3 { x: x, y: y, z: z };
-}
-
-// Seems that the fxhash is slower than this:
-impl Hash for IVec3 {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        state.write_i32(self.x ^ self.y ^ self.z);
-    }
-}
-
-impl IVec3 {
-    fn rot_x(self) -> Self {
-        return Self {
-            x: self.x,
-            y: -self.z,
-            z: self.y,
-        };
-    }
-
-    const fn rot_y(self) -> Self {
-        return Self {
-            x: -self.z,
-            y: self.y,
-            z: self.x,
-        };
-    }
-
-    const fn rot_z(self) -> Self {
-        return Self {
-            x: self.y,
-            y: -self.x,
-            z: self.z,
-        };
-    }
-
-    fn dist_to(&self, other: &IVec3) -> u32 {
-        return (*self - *other).dist();
-    }
-
-    fn dist(&self) -> u32 {
-        return (self.x.abs() + self.y.abs() + self.z.abs())
-            .try_into()
-            .unwrap();
-    }
-}
-
-impl Debug for IVec3 {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        write!(f, "({},{},{})", self.x, self.y, self.z)
-    }
-}
-
-impl Sub for IVec3 {
-    type Output = IVec3;
-
-    fn sub(self, other: IVec3) -> IVec3 {
-        return Self {
-            x: self.x - other.x,
-            y: self.y - other.y,
-            z: self.z - other.z,
-        };
-    }
-}
-
-impl Add for IVec3 {
-    type Output = IVec3;
-
-    fn add(self, other: IVec3) -> IVec3 {
-        return Self {
-            x: self.x + other.x,
-            y: self.y + other.y,
-            z: self.z + other.z,
-        };
-    }
-}
-
-impl FromStr for IVec3 {
-    type Err = Infallible;
-
-    fn from_str(s: &str) -> Result<IVec3, Infallible> {
-        let mut s = s.split(',');
-        let x = s.next().unwrap().parse().unwrap();
-        let y = s.next().unwrap().parse().unwrap();
-        let z = s.next().unwrap().parse().unwrap();
-        return Ok(IVec3 { x, y, z });
-    }
-}
 
 #[derive(Debug)]
 pub enum Instruction {
@@ -289,7 +189,7 @@ pub fn puzzle_b(ins: &Vec<Instruction>) -> u128 {
     }
 
     let mut num_on: u128 = 0;
-    for (location, state) in &cube_map {
+    for (_, state) in &cube_map {
         if *state == CUBE_ON {
             num_on += 1;
         }
