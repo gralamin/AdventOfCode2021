@@ -99,3 +99,79 @@ impl FromStr for IVec3 {
         return Ok(IVec3 { x, y, z });
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashSet;
+
+    #[test]
+    fn test_add() {
+        let one = vec3(-3, -5, -7);
+        let two = vec3(1, 9, 7);
+        let expected = vec3(-2, 4, 0);
+        assert_eq!(one + two, expected);
+    }
+
+    #[test]
+    fn test_sub() {
+        let one = vec3(-3, -5, -7);
+        let two = vec3(1, -9, 7);
+        let expected = vec3(-4, 4, -14);
+        assert_eq!(one - two, expected);
+    }
+
+    #[test]
+    fn test_from_string() {
+        let s = "1,4,3";
+        let result: IVec3 = s.parse().unwrap();
+        assert_eq!(result, vec3(1, 4, 3));
+    }
+
+    #[test]
+    fn test_can_hash() {
+        let mut set: HashSet<IVec3> = HashSet::new();
+        let one = vec3(1, 1, 1);
+        let two = vec3(1, 0, 1);
+        let three = vec3(0, 1, 1);
+        let four = vec3(1, 1, 0);
+        set.insert(one);
+        set.insert(four);
+        assert_eq!(set.len(), 2);
+        assert_eq!(set.contains(&one), true);
+        assert_eq!(set.contains(&two), false);
+        assert_eq!(set.contains(&three), false);
+        assert_eq!(set.contains(&four), true);
+    }
+
+    #[test]
+    fn test_rot_x() {
+        let a = vec3(1, 2, 4);
+        assert_eq!(a.rot_x(), vec3(1, -4, 2));
+    }
+
+    #[test]
+    fn test_rot_y() {
+        let a = vec3(1, 2, 4);
+        assert_eq!(a.rot_y(), vec3(-4, 2, 1));
+    }
+
+    #[test]
+    fn test_rot_z() {
+        let a = vec3(1, 2, 4);
+        assert_eq!(a.rot_z(), vec3(2, -1, 4));
+    }
+
+    #[test]
+    fn test_dist() {
+        let x = vec3(1, -4, 5);
+        assert_eq!(x.dist(), 10);
+    }
+
+    #[test]
+    fn test_dist_to() {
+        let x = vec3(1, -4, 5);
+        let y = vec3(99, 99, 99);
+        assert_eq!(x.dist_to(&y), 295);
+    }
+}

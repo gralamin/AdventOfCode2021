@@ -1,8 +1,8 @@
 pub use filelib::{load, split_lines_by_blanks};
 use itertools::Itertools;
+pub use ivec3::{vec3, IVec3};
 pub use rustc_hash::{FxHashMap, FxHashSet};
 use std::cmp::max;
-pub use ivec3::{IVec3, vec3};
 
 fn rot_x_repeatedly(v: IVec3, n: usize) -> IVec3 {
     let mut result = v;
