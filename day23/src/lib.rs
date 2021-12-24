@@ -413,6 +413,13 @@ pub fn puzzle_a(input: &Vec<Amphipod>) -> usize {
     return solve_both_parts(initial_state);
 }
 
+/// Use A* to solve the configuration with extra defined input
+///
+/// ```
+/// let input = "#############\n#...........#\n###B#C#B#D###\n  #A#D#C#A#  \n  #########  ";
+/// let v = day23::parse_amphipod(input);
+/// assert_eq!(day23::puzzle_b(&v), 44169);
+/// ```
 pub fn puzzle_b(input: &Vec<Amphipod>) -> usize {
     let initial_state = State {
         hallway: [None; 11],
