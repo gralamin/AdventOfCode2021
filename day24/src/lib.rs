@@ -1,4 +1,9 @@
 pub use filelib::load;
+use rustc_hash::FxHashMap;
+
+pub type CacheKey = (i32, usize, bool);
+pub type CacheValue = Option<u64>;
+pub type Cache = FxHashMap<CacheKey, CacheValue>;
 
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
 pub enum Variables {
@@ -128,7 +133,7 @@ struct ALUState {
     x: i32,
     y: i32,
     z: i32,
-    counter: u32
+    counter: u32,
 }
 
 impl ALUState {
@@ -218,28 +223,88 @@ pub fn parse_all_instructions(s: &str) -> Vec<Instruction> {
         .collect();
 }
 
-fn run_monad(ins: &Vec<Instruction>, input_num: u64) -> bool {
-    if contains_zeroes(input_num) {
-        return false;
+fn dfs_monad(
+    ins: &Vec<Instruction>,
+    step: usize,
+    state: &mut ALUState,
+    cache: &mut Cache,
+    maximize: bool,
+) -> Option<u64> {
+    // Why this cache key?
+    // x, y are reset each input, so z is the only state I need to track there.
+    // step tells me how far into the instructions I am, it should be equal to state.counter / 18
+    // (18 being the number of instructions between each Input to w)
+    // Since I'm basically building up a number that = 0, its giving all the digits that should come
+    // after to work.
+    // I couldn't think of a good way to keep part 1 and part 2 in the same Cache
+    // So for now I added maximize, but it would be nice to avoid needing it.
+    let get_cache_key = |state: &ALUState, step: usize, maximize: bool| -> CacheKey {
+        return (state.z, step, maximize);
+    };
+
+    let key = get_cache_key(state, step, maximize);
+    if cache.contains_key(&key) {
+        return *cache.get(&key).unwrap();
     }
-    let mut input_generator = InputSupplier::from(input_num);
-    assert_eq!(input_generator.nums.len(), 14);
-    let mut state = ALUState::new();
 
-    for instruction in ins.iter() {
-        instruction.run(&mut state, &mut input_generator);
+    // I feel like there is a more elegant way to handle maximize, but too tired to figure it out
+    if maximize {
+        for possible_num in (1..=9).rev() {
+            let mut input_generator = InputSupplier::from(possible_num);
+            let mut sub_state = state.clone();
+            // 18 figured out by looking at input.
+            ins[step * 18].run(&mut sub_state, &mut input_generator);
+
+            for instruction in ins.iter().skip((step * 18) + 1) {
+                if *instruction == Instruction::Input(Variables::W) {
+                    let r = dfs_monad(ins, step + 1, &mut sub_state.clone(), cache, maximize);
+                    if let Some(r) = r {
+                        let cur_digit: u32 = (14 - step - 1) as u32;
+                        let new_result = 10_u64.pow(cur_digit) * possible_num + r;
+                        cache.insert(key, Some(new_result));
+                        return Some(new_result);
+                    }
+                    break;
+                } else {
+                    instruction.run(&mut sub_state, &mut input_generator);
+                }
+            }
+            if sub_state.z == 0 {
+                let result = possible_num;
+                cache.insert(key, Some(result));
+                return Some(result);
+            }
+        }
+    } else {
+        for possible_num in 1..=9 {
+            let mut input_generator = InputSupplier::from(possible_num);
+            let mut sub_state = state.clone();
+            // 18 figured out by looking at input.
+            ins[step * 18].run(&mut sub_state, &mut input_generator);
+
+            for instruction in ins.iter().skip((step * 18) + 1) {
+                if *instruction == Instruction::Input(Variables::W) {
+                    let r = dfs_monad(ins, step + 1, &mut sub_state.clone(), cache, maximize);
+                    if let Some(r) = r {
+                        let cur_digit: u32 = (14 - step - 1) as u32;
+                        let new_result = 10_u64.pow(cur_digit) * possible_num + r;
+                        cache.insert(key, Some(new_result));
+                        return Some(new_result);
+                    }
+                    break;
+                } else {
+                    instruction.run(&mut sub_state, &mut input_generator);
+                }
+            }
+            if sub_state.z == 0 {
+                let result = possible_num;
+                cache.insert(key, Some(result));
+                return Some(result);
+            }
+        }
     }
-
-    assert_eq!(state.counter, ins.len() as u32);
-    return state.z == 0;
-}
-
-fn contains_zeroes(input_num: u64) -> bool {
-    return input_num
-        .to_string()
-        .chars()
-        .map(|d| d.to_digit(10).unwrap())
-        .any(|x| x == 0);
+    cache.insert(key, None);
+    return None;
 }
 
 /// Brute force the numbers
@@ -247,15 +312,36 @@ fn contains_zeroes(input_num: u64) -> bool {
 /// To get a better solution, we would need to read the code, or run tests.
 /// But I suspect its fast enough to just iterate.
 /// We have no sample Monad, so I can't test this...
-pub fn puzzle_a(ins: &Vec<Instruction>) -> u64 {
-    let mut max_model = 0;
-    for candidate_model in 11111111111111..=99999999999999 {
-        let valid = run_monad(ins, candidate_model);
+pub fn puzzle_a(ins: &Vec<Instruction>, cache: &mut Cache) -> u64 {
+    /*
+    for candidate_model in (11111111111111..=99999999999999).rev() {
+        let valid = run_monad(ins, candidate_model, cache);
         if valid {
-            max_model = candidate_model;
+            return candidate_model;
+        }
+    }*/
+    let mut state = ALUState::new();
+    if let Some(x) = dfs_monad(ins, 0, &mut state, cache, true) {
+        return x;
+    }
+    return 0;
+}
+
+/// Just do puzzle_a in reverse.
+pub fn puzzle_b(ins: &Vec<Instruction>, cache: &mut Cache) -> u64 {
+    /*
+    for candidate_model in 11111111111111..=99999999999999 {
+        let valid = run_monad(ins, candidate_model, cache);
+        if valid {
+            return candidate_model;
         }
     }
-    return max_model;
+    */
+    let mut state = ALUState::new();
+    if let Some(x) = dfs_monad(ins, 0, &mut state, cache, false) {
+        return x;
+    }
+    return 0;
 }
 
 #[cfg(test)]
