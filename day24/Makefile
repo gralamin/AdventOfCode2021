@@ -2,7 +2,7 @@ prog=$(shell basename $(CURDIR))
 
 build:
 	cargo build --verbose
-	cp target/debug/$(prog) $(prog).day
+	cp target/release/$(prog) $(prog).day
 
 test:
 	cargo test --verbose
