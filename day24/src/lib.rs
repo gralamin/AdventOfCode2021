@@ -412,5 +412,38 @@ mod tests {
         assert_eq!(state.x, 1);
         assert_eq!(state.y, 0);
         assert_eq!(state.z, 1);
+
+        let instructions =
+            "inp w\nadd z w\neql z x\nadd z w\neql x 0\nmod y z\nadd y 1\ndiv w y\nmul y 2";
+        let parsed_instructions = parse_all_instructions(instructions);
+        for instruction in parsed_instructions {
+            instruction.run(&mut state, &mut inputs);
+        }
+        assert_eq!(state.w, 1);
+        assert_eq!(state.x, 0);
+        assert_eq!(state.y, 2);
+        assert_eq!(state.z, 1);
+    }
+
+    #[test]
+    fn test_dfs_monad_simple_maximize() {
+        let s = "inp w\nmul x 0\nadd x z\nmod x 26\ndiv z 1\nadd x 10\neql x w\neql x 0\nmul y 0\nadd y 25\nmul y x\nadd y 1\nmul z y\nmul y 0\nadd y w\nadd y 1\nmul y x\nadd z y\ninp w\nmul x 0\nadd x z\nmod x 26\ndiv z 1\nadd x 11\neql x w\neql x 0\nmul y 0\nadd y 25\nmul y x\nadd y 1\nmul z y\nmul y 0\nadd y w\nadd y 9\nmul y x\nadd z y";
+        let parsed_instructions = parse_all_instructions(s);
+        let mut state = ALUState::new();
+        let mut cache = Cache::default();
+
+        let result = dfs_monad(&parsed_instructions, 0, &mut state, &mut cache, true);
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_dfs_monad_simple_minimize() {
+        let s = "inp w\nmul x 0\nadd x z\nmod x 26\ndiv z 1\nadd x 10\neql x w\neql x 0\nmul y 0\nadd y 25\nmul y x\nadd y 1\nmul z y\nmul y 0\nadd y w\nadd y 1\nmul y x\nadd z y\ninp w\nmul x 0\nadd x z\nmod x 26\ndiv z 1\nadd x 11\neql x w\neql x 0\nmul y 0\nadd y 25\nmul y x\nadd y 1\nmul z y\nmul y 0\nadd y w\nadd y 9\nmul y x\nadd z y";
+        let parsed_instructions = parse_all_instructions(s);
+        let mut state = ALUState::new();
+        let mut cache = Cache::default();
+
+        let result = dfs_monad(&parsed_instructions, 0, &mut state, &mut cache, false);
+        assert_eq!(result, None);
     }
 }
