@@ -413,13 +413,4 @@ mod tests {
         assert_eq!(state.y, 0);
         assert_eq!(state.z, 1);
     }
-
-    #[test]
-    fn test_contains_zeroes() {
-        let num = 11111111111111;
-        assert_eq!(contains_zeroes(num), false);
-
-        let num = 11111112110111;
-        assert_eq!(contains_zeroes(num), true);
-    }
 }
