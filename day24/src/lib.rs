@@ -128,6 +128,7 @@ struct ALUState {
     x: i32,
     y: i32,
     z: i32,
+    counter: u32
 }
 
 impl ALUState {
@@ -137,6 +138,7 @@ impl ALUState {
             x: 0,
             y: 0,
             z: 0,
+            counter: 0,
         };
     }
 
@@ -156,6 +158,9 @@ impl ALUState {
             Variables::Y => self.y = i,
             Variables::Z => self.z = i,
         }
+        // Each instruction sets once, so we can just increase the counter
+        // when this is called.
+        self.counter += 1;
     }
 }
 
@@ -166,7 +171,7 @@ struct InputSupplier {
 }
 
 impl InputSupplier {
-    fn from(i: u32) -> Self {
+    fn from(i: u64) -> Self {
         let nums = i
             .to_string()
             .chars()
@@ -204,13 +209,53 @@ impl InputSupplier {
 ///     Div(W, Integer(2)),
 ///     Mod(W, Integer(2))
 /// ];
-/// assert_eq!(day24::parse_all_instrcutions(instructions), expected);
+/// assert_eq!(day24::parse_all_instructions(instructions), expected);
 /// ```
-pub fn parse_all_instrcutions(s: &str) -> Vec<Instruction> {
+pub fn parse_all_instructions(s: &str) -> Vec<Instruction> {
     return s
         .lines()
         .filter_map(|x| x.parse::<Instruction>().ok())
         .collect();
+}
+
+fn run_monad(ins: &Vec<Instruction>, input_num: u64) -> bool {
+    if contains_zeroes(input_num) {
+        return false;
+    }
+    let mut input_generator = InputSupplier::from(input_num);
+    assert_eq!(input_generator.nums.len(), 14);
+    let mut state = ALUState::new();
+
+    for instruction in ins.iter() {
+        instruction.run(&mut state, &mut input_generator);
+    }
+
+    assert_eq!(state.counter, ins.len() as u32);
+    return state.z == 0;
+}
+
+fn contains_zeroes(input_num: u64) -> bool {
+    return input_num
+        .to_string()
+        .chars()
+        .map(|d| d.to_digit(10).unwrap())
+        .any(|x| x == 0);
+}
+
+/// Brute force the numbers
+///
+/// To get a better solution, we would need to read the code, or run tests.
+/// But I suspect its fast enough to just iterate.
+/// We have no sample Monad, so I can't test this...
+pub fn puzzle_a(ins: &Vec<Instruction>) -> u64 {
+    let mut max_model = 0;
+    for candidate_model in 11111111111111..=99999999999999 {
+        let valid = run_monad(ins, candidate_model);
+        if valid {
+            max_model = candidate_model;
+        }
+    }
+    return max_model;
 }
 
 #[cfg(test)]
@@ -235,7 +280,7 @@ mod tests {
         let s = "";
         let result: Result<Instruction, _> = s.parse();
         match result {
-            Ok(v) => panic!("Should not get a value here"),
+            Ok(_) => panic!("Should not get a value here"),
             Err(_) => assert_eq!(1, 1),
         };
     }
@@ -273,7 +318,7 @@ mod tests {
         let mut state = ALUState::new();
         let mut inputs = InputSupplier::from(51);
         let instructions = "inp w\nadd z w\nmod z 2\ndiv w 2\nadd y w\nmod y 2\ndiv w 2\nadd x w\nmod x 2\ndiv w 2\nmod w 2\n";
-        let parsed_instructions = parse_all_instrcutions(instructions);
+        let parsed_instructions = parse_all_instructions(instructions);
         for instruction in parsed_instructions {
             instruction.run(&mut state, &mut inputs);
         }
@@ -281,5 +326,14 @@ mod tests {
         assert_eq!(state.x, 1);
         assert_eq!(state.y, 0);
         assert_eq!(state.z, 1);
+    }
+
+    #[test]
+    fn test_contains_zeroes() {
+        let num = 11111111111111;
+        assert_eq!(contains_zeroes(num), false);
+
+        let num = 11111112110111;
+        assert_eq!(contains_zeroes(num), true);
     }
 }
