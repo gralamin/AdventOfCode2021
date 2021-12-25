@@ -48,4 +48,6 @@ extern crate my_lib;
 ## Lib list
 
 * `filelib` - File input/output helper methods to do with basic types (eg, not types in other libraries)
-* `submarinelib` -  Provides structs to represent a Submarine, where it is, its movement, etc.
+* `submarinelib` - Provides structs to represent a Submarine, where it is, its movement, etc.
+* `ivec3` - a vector `x,y,z` for math operations.
+* `boardlib` - Handles a 2 dimensional board and coordinate system that can be used with various types.
