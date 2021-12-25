@@ -1,6 +1,6 @@
 use day25::load;
 use day25::parse_sea_cucs;
-//use day24::puzzle_a;
+use day25::puzzle_a;
 //use day24::puzzle_b;
 //use day24::Cache;
 
@@ -14,9 +14,9 @@ fn main() {
 
     //let mut cache = Cache::default();
 
-    // let value_a = puzzle_a(&cucumbers);
-    // println!("Solution to 1: {}", value_a);
+    let value_a = puzzle_a(&cucumbers);
+    println!("Solution to 1: {}", value_a);
 
-    // let value_b = puzzle_b(&instructions, &mut cache);
+    // let value_b = puzzle_b(&cucumbers);
     // println!("Solution to 2: {}", value_b);
 }

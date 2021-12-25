@@ -69,6 +69,12 @@ impl Clone for CucumberBoard {
     }
 }
 
+impl PartialEq for CucumberBoard {
+    fn eq(&self, other: &Self) -> bool {
+        return self.board.data_copy() == other.board.data_copy();
+    }
+}
+
 impl CucumberBoard {
     fn new(data: &Vec<Vec<SeaCuc>>) -> Self {
         let board_data: Vec<SeaCuc> = data.iter().flatten().map(|x| x.clone()).collect();
@@ -134,6 +140,31 @@ impl CucumberBoard {
                     }
                 }
             }
+        }
+    }
+}
+
+/// Calculate when the sea cucumbers stop moving.
+///
+/// ```
+/// let s = "v...>>.vv>\n.vv>>.vv..\n>>.>v>...v\n>>v>>.>.v.\nv>v.vv.v..\n>.>>..v...\n.vv..>.>v.\nv.v..>>v.v\n....v..v.>";
+/// let cucs = day25::parse_sea_cucs(&s);
+/// assert_eq!(day25::puzzle_a(&cucs), 58);
+/// ```
+pub fn puzzle_a(cucumbers: &Vec<Vec<SeaCuc>>) -> u32 {
+    let mut cur_board = CucumberBoard::new(cucumbers);
+
+    let mut last_board: CucumberBoard;
+    let mut step = 0;
+    loop {
+        step += 1;
+        last_board = cur_board.clone();
+        cur_board.step();
+        if last_board == cur_board {
+            return step;
+        }
+        if step == u32::MAX {
+            panic!("Ran out of iterations");
         }
     }
 }
