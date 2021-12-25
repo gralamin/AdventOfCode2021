@@ -93,7 +93,6 @@ impl CucumberBoard {
             if handled.contains(&coord) {
                 continue;
             }
-            handled.insert(coord);
             if let Some(cur) = self.board.get_value(coord) {
                 if cur == value.clone() {
                     if let Some(next_coord) =
@@ -104,6 +103,32 @@ impl CucumberBoard {
                                 self.board.set_value(coord, SeaCuc::Empty);
                                 self.board.set_value(next_coord, cur);
                                 handled.insert(next_coord);
+                                handled.insert(coord);
+                            }
+                        }
+                    } else {
+                        // Wrap around logic:
+                        let wrap_coord = match board_dir {
+                            Direction::EAST => BoardCoordinate::new(0, coord.y),
+                            Direction::SOUTH => BoardCoordinate::new(coord.x, 0),
+                            Direction::NORTH => {
+                                BoardCoordinate::new(coord.x, self.board.get_height() - 1)
+                            }
+                            Direction::WEST => {
+                                BoardCoordinate::new(self.board.get_width() - 1, coord.y)
+                            }
+                            _ => coord.clone(), // Not bothering to implement Diagonals
+                        };
+                        // when wrapping, something could be there before we move, handle that case
+                        if handled.contains(&wrap_coord) {
+                            continue;
+                        }
+                        if let Some(next) = self.board.get_value(wrap_coord) {
+                            if next == SeaCuc::Empty {
+                                self.board.set_value(coord, SeaCuc::Empty);
+                                self.board.set_value(wrap_coord, cur);
+                                handled.insert(wrap_coord);
+                                handled.insert(coord);
                             }
                         }
                     }
@@ -160,5 +185,41 @@ mod tests {
         assert_eq!(board.get(2, 2), Some(SeaCuc::South));
         assert_eq!(board.get(7, 2), Some(SeaCuc::South));
         assert_eq!(board.get(8, 2), Some(SeaCuc::East));
+    }
+
+    #[test]
+    fn test_wrapping_steps() {
+        let s = "..v.\n>..>\n..v.";
+        //       0123  0123  0123
+        let parsed = parse_sea_cucs(&s);
+        let mut board = CucumberBoard::new(&parsed);
+
+        board.step();
+        /* Result looks like:
+          .... 0
+          .>v> 1
+          ..v. 2
+          0123
+        */
+        assert_eq!(board.get(2, 0), Some(SeaCuc::Empty));
+        assert_eq!(board.get(0, 1), Some(SeaCuc::Empty));
+        assert_eq!(board.get(1, 1), Some(SeaCuc::East));
+        assert_eq!(board.get(2, 1), Some(SeaCuc::South));
+        assert_eq!(board.get(3, 1), Some(SeaCuc::East));
+        assert_eq!(board.get(2, 2), Some(SeaCuc::South));
+
+        board.step();
+        /* Result looks like:
+          ..v. 0
+          >>v. 1
+          .... 2
+          0123
+        */
+        assert_eq!(board.get(2, 0), Some(SeaCuc::South));
+        assert_eq!(board.get(0, 1), Some(SeaCuc::East));
+        assert_eq!(board.get(1, 1), Some(SeaCuc::East));
+        assert_eq!(board.get(2, 1), Some(SeaCuc::South));
+        assert_eq!(board.get(3, 1), Some(SeaCuc::Empty));
+        assert_eq!(board.get(2, 2), Some(SeaCuc::Empty));
     }
 }
