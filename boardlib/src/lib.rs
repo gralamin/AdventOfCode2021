@@ -61,6 +61,13 @@ impl<T: Copy> Board<T> {
             first: true,
         };
     }
+
+    pub fn data_copy(&self) -> Vec<T>
+    where
+        T: Clone,
+    {
+        return self.values.clone();
+    }
 }
 
 pub struct BoardIter {
@@ -92,7 +99,7 @@ impl Iterator for BoardIter {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum Direction {
     NORTH,
     EAST,
