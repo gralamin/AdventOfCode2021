@@ -17,12 +17,3 @@ fn main() {
     let value_b = puzzle_b(&instructions, &mut cache);
     println!("Solution to 2: {}", value_b);
 }
-
-/*
-Performance without caching (both parts):
-
-
-
-Performance with caching (both parts): TODO
-
-*/
