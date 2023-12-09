@@ -4,4 +4,5 @@
 fn main() {
     println!("Hello World!");
     println!("{}", helloworld::add(5, 7));
+    helloworld::observer();
 }
